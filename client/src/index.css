@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(210, 20%, 98%);
+  --foreground: hsl(224, 71%, 4%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(224, 71%, 4%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(224, 71%, 4%);
+  --primary: hsl(88, 50%, 45%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(210, 40%, 96%);
+  --secondary-foreground: hsl(222, 84%, 4%);
+  --muted: hsl(210, 40%, 96%);
+  --muted-foreground: hsl(215, 16%, 47%);
+  --accent: hsl(88, 42%, 85%);
+  --accent-foreground: hsl(222, 84%, 4%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(214, 32%, 91%);
+  --ring: hsl(88, 50%, 45%);
+  --chart-1: hsl(203, 88%, 53%);
+  --chart-2: hsl(159, 100%, 36%);
+  --chart-3: hsl(42, 92%, 56%);
+  --chart-4: hsl(147, 78%, 41%);
+  --chart-5: hsl(341, 75%, 50%);
+  --sidebar: hsl(210, 40%, 96%);
+  --sidebar-foreground: hsl(224, 71%, 4%);
+  --sidebar-primary: hsl(88, 50%, 45%);
+  --sidebar-primary-foreground: hsl(0, 0%, 98%);
+  --sidebar-accent: hsl(88, 42%, 85%);
+  --sidebar-accent-foreground: hsl(222, 84%, 4%);
+  --sidebar-border: hsl(214, 32%, 91%);
+  --sidebar-ring: hsl(88, 50%, 45%);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00);
+  --shadow-xs: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00);
+  --shadow-sm: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 1px 2px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 1px 2px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow-md: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 2px 4px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow-lg: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 4px 6px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow-xl: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 8px 10px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow-2xl: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+.dark {
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(200, 6.67%, 91.18%);
+  --card: hsl(228, 9.8%, 10%);
+  --card-foreground: hsl(0, 0%, 85.1%);
+  --popover: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(200, 6.67%, 91.18%);
+  --primary: hsl(88, 50%, 45%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(195, 15.38%, 94.9%);
+  --secondary-foreground: hsl(224, 71%, 4%);
+  --muted: hsl(0, 0%, 9.41%);
+  --muted-foreground: hsl(210, 3.39%, 46.27%);
+  --accent: hsl(205, 70%, 7.84%);
+  --accent-foreground: hsl(88, 50%, 45%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --border: hsl(210, 5.26%, 14.9%);
+  --input: hsl(207, 27.66%, 18.43%);
+  --ring: hsl(88, 50%, 45%);
+  --chart-1: hsl(203, 88%, 53%);
+  --chart-2: hsl(159, 100%, 36%);
+  --chart-3: hsl(42, 92%, 56%);
+  --chart-4: hsl(147, 78%, 41%);
+  --chart-5: hsl(341, 75%, 50%);
+  --sidebar: hsl(228, 9.8%, 10%);
+  --sidebar-foreground: hsl(0, 0%, 85.1%);
+  --sidebar-primary: hsl(88, 50%, 45%);
+  --sidebar-primary-foreground: hsl(0, 0%, 98%);
+  --sidebar-accent: hsl(205, 70%, 7.84%);
+  --sidebar-accent-foreground: hsl(88, 50%, 45%);
+  --sidebar-border: hsl(205, 15.79%, 26.08%);
+  --sidebar-ring: hsl(88, 50%, 45%);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00);
+  --shadow-xs: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00);
+  --shadow-sm: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 1px 2px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 1px 2px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow-md: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 2px 4px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow-lg: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 4px 6px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow-xl: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00), 0px 8px 10px -1px hsl(88, 50%, 45% / 0.00);
+  --shadow-2xl: 0px 2px 0px 0px hsl(88, 50%, 45% / 0.00);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Chess.com inspired styles */
+.chess-table {
+  font-variant-numeric: tabular-nums;
+}
+
+.tier-extreme {
+  background-color: hsl(0, 84%, 95%);
+  color: hsl(0, 84%, 40%);
+}
+
+.tier-high {
+  background-color: hsl(30, 84%, 95%);
+  color: hsl(30, 84%, 40%);
+}
+
+.tier-moderate {
+  background-color: hsl(45, 84%, 95%);
+  color: hsl(45, 84%, 40%);
+}
+
+.tier-low {
+  background-color: hsl(88, 84%, 95%);
+  color: hsl(88, 84%, 40%);
+}
+
+.table-row:hover {
+  background-color: hsl(210, 40%, 98%);
+}
+
+.expandable-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.expandable-content.expanded {
+  max-height: 500px;
+}
+
+/* Chess piece icons */
+.chess-icon {
+  font-size: 1.5rem;
+  color: var(--primary);
+}
