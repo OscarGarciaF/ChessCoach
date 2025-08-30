@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { type StreakWithPlayer } from "@shared/schema";
 import { Input } from "@/components/ui/input";
@@ -250,9 +251,8 @@ export default function StreaksTable() {
               </thead>
               <tbody className="bg-card divide-y divide-border">
                 {filteredAndSortedStreaks?.map((streak) => (
-                  <>
+                  <React.Fragment key={streak.id}>
                     <tr
-                      key={streak.id}
                       className="table-row cursor-pointer hover:bg-muted/50"
                       onClick={() => toggleExpand(streak.id)}
                       data-testid={`streak-row-${streak.id}`}
@@ -352,7 +352,7 @@ export default function StreaksTable() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
