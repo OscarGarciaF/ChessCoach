@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  chess-scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: interesting-chess-scraper
+    environment:
+      - IC_USER_AGENT=${IC_USER_AGENT:-Development Bot <dev@example.com>}
+      - IC_OUTPUT_DIR=/app/data
+    volumes:
+      - ./data:/app/data
+    command: >
+      --days 7 
+      --titles "GM,IM" 
+      --limit-players 10 
+      --verbose
+    restart: "no"
+
+  # Optional: monitoring container
+  # You could add other services here like:
+  # - A file server to serve the JSON output
+  # - A monitoring/alerting service
+  # - A database to store historical data
+
+volumes:
+  chess_data:
+    driver: local
