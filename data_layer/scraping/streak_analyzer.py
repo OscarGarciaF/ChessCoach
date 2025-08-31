@@ -9,7 +9,6 @@ import sys
 from typing import Dict, List, Optional, Tuple
 
 from chess_api import extract_rating_deviation, fetch_player_stats
-from http_client import ChessComHttpClient
 from models import GameView, PlayerInfo, Streak
 from probability import (
     calculate_streak_probability,
@@ -79,7 +78,6 @@ def detect_win_streaks(
     player: PlayerInfo,
     games: List[dict],
     stats_cache: Dict[str, dict],
-    http: ChessComHttpClient,
     thresholds: List[Tuple[str, float]],
     verbose: bool = False
 ) -> List[Streak]:
@@ -90,7 +88,6 @@ def detect_win_streaks(
         player: Player information
         games: List of games in chronological order
         stats_cache: Cache of player statistics to avoid redundant API calls
-        http: HTTP client for fetching opponent statistics
         thresholds: Probability thresholds for classifying interesting streaks
         verbose: Whether to enable verbose logging
         
@@ -155,7 +152,7 @@ def detect_win_streaks(
         # Fetch opponent stats for RD calculation (with caching)
         opponent_username_lower = opponent_username.lower()
         if opponent_username_lower not in stats_cache:
-            opponent_stats = fetch_player_stats(http, opponent_username_lower)
+            opponent_stats = fetch_player_stats(opponent_username_lower)
             stats_cache[opponent_username_lower] = opponent_stats
 
         opponent_stats = stats_cache.get(opponent_username_lower, {})
@@ -196,7 +193,6 @@ def analyze_player_streaks(
     player: PlayerInfo,
     games: List[dict],
     stats_cache: Dict[str, dict],
-    http: ChessComHttpClient,
     thresholds: List[Tuple[str, float]],
     verbose: bool = False
 ) -> List[Streak]:
@@ -207,7 +203,6 @@ def analyze_player_streaks(
         player: Player information
         games: List of games in chronological order  
         stats_cache: Shared cache for player statistics
-        http: HTTP client instance
         thresholds: Probability thresholds for interesting streaks
         verbose: Whether to enable verbose logging
         
@@ -220,7 +215,7 @@ def analyze_player_streaks(
     if verbose:
         print(f"[INFO] Analyzing {len(games)} games for {player.username}", file=sys.stderr)
 
-    streaks = detect_win_streaks(player, games, stats_cache, http, thresholds, verbose)
+    streaks = detect_win_streaks(player, games, stats_cache, thresholds, verbose)
 
     if verbose and streaks:
         print(f"[INFO] Found {len(streaks)} interesting streaks for {player.username}", 

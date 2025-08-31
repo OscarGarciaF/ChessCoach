@@ -3,14 +3,27 @@ Chess.com API interaction functions.
 
 This module provides high-level functions for interacting with the Chess.com Public API,
 including fetching player data, game archives, and statistics.
+
+Uses the official chess.com Python module for reliable API interactions.
 """
 
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 
-from config import PUBAPI
-from http_client import ChessComHttpClient
+import chessdotcom
+from chessdotcom import Client
+
 from models import PlayerInfo
+
+
+def setup_chess_client(user_agent: str) -> None:
+    """
+    Initialize the chess.com client with proper User-Agent.
+    
+    Args:
+        user_agent: User-Agent string identifying your application and contact info
+    """
+    Client.request_config["headers"]["User-Agent"] = user_agent
 
 
 def now_utc_timestamp() -> int:
@@ -34,7 +47,6 @@ def parse_time_window(days: int) -> Tuple[int, int]:
 
 
 def fetch_titled_players(
-    http: ChessComHttpClient, 
     titles: List[str], 
     verbose: bool = False
 ) -> Dict[str, str]:
@@ -42,7 +54,6 @@ def fetch_titled_players(
     Fetch all players with the specified chess titles.
     
     Args:
-        http: HTTP client instance
         titles: List of title abbreviations (e.g., ['GM', 'IM'])
         verbose: Whether to print verbose logging
         
@@ -57,95 +68,150 @@ def fetch_titled_players(
     players: Dict[str, str] = {}
     
     for title in titles:
-        url = f"{PUBAPI}/titled/{title}"
-        data = http.get_json(url)
-        
-        if not data or "players" not in data:
+        try:
+            response = chessdotcom.get_titled_players(title)
+            if not response or not hasattr(response, 'json'):
+                if verbose:
+                    print(f"[WARN] No response for title {title}")
+                continue
+                
+            data = response.json
+            if not data or "players" not in data:
+                if verbose:
+                    print(f"[WARN] No players found for title {title}")
+                continue
+                
+            for username in data["players"]:
+                username_lower = username.lower()
+                
+                # Keep the highest-ranked title if player has multiple
+                existing_title = players.get(username_lower)
+                if (existing_title is None or 
+                    TITLE_RANK.get(title, 999) < TITLE_RANK.get(existing_title, 999)):
+                    players[username_lower] = title
+        except Exception as e:
             if verbose:
-                print(f"[WARN] No players found for title {title}")
+                print(f"[WARN] Error fetching title {title}: {e}")
             continue
-            
-        for username in data["players"]:
-            username_lower = username.lower()
-            
-            # Keep the highest-ranked title if player has multiple
-            existing_title = players.get(username_lower)
-            if (existing_title is None or 
-                TITLE_RANK.get(title, 999) < TITLE_RANK.get(existing_title, 999)):
-                players[username_lower] = title
     
     return players
 
 
-def fetch_player_archives(http: ChessComHttpClient, username: str) -> List[str]:
+def fetch_player_archives(username: str) -> List[str]:
     """
     Fetch the list of monthly game archive URLs for a player.
     
     Args:
-        http: HTTP client instance
         username: Chess.com username
         
     Returns:
         List of archive URLs in chronological order
     """
-    url = f"{PUBAPI}/player/{username}/games/archives"
-    data = http.get_json(url)
-    
-    if not data or "archives" not in data:
+    try:
+        response = chessdotcom.get_player_game_archives(username)
+        if not response or not hasattr(response, 'archives'):
+            return []
+        return response.archives
+    except Exception:
         return []
-    
-    return data["archives"]
 
 
-def fetch_month_games(http: ChessComHttpClient, archive_url: str) -> List[dict]:
+def fetch_month_games(archive_url: str) -> List[dict]:
     """
     Fetch all games from a monthly archive.
     
     Args:
-        http: HTTP client instance
-        archive_url: URL to the monthly archive
+        archive_url: URL to the monthly archive (not used with chess.com module)
         
     Returns:
         List of game dictionaries
+        
+    Note:
+        This function needs to be called differently with the chess.com module.
+        The archive_url format is: https://api.chess.com/pub/player/{username}/games/{year}/{month}
+        We extract the username, year, and month from the URL.
     """
-    data = http.get_json(archive_url)
-    
-    if not data or "games" not in data:
+    try:
+        # Extract username, year, month from URL
+        # URL format: https://api.chess.com/pub/player/{username}/games/{year}/{month}
+        parts = archive_url.split('/')
+        if len(parts) < 7:
+            return []
+        
+        username = parts[5]  # player/{username}
+        year = parts[7]      # games/{year}
+        month = parts[8]     # {year}/{month}
+        
+        response = chessdotcom.get_player_games_by_month(username, year, month)
+        if not response or not hasattr(response, 'games'):
+            return []
+        
+        # Convert games to dictionary format
+        games = []
+        for game in response.games:
+            game_dict = {
+                'url': game.url,
+                'pgn': game.pgn,
+                'time_control': game.time_control,
+                'start_time': game.start_time,
+                'end_time': game.end_time,
+                'rules': game.rules,
+                'time_class': game.time_class,
+                'fen': game.fen,
+                'white': {
+                    'username': game.white.username if game.white else None,
+                    'rating': game.white.rating if game.white else None,
+                    'result': game.white.result if game.white else None,
+                },
+                'black': {
+                    'username': game.black.username if game.black else None,
+                    'rating': game.black.rating if game.black else None,
+                    'result': game.black.result if game.black else None,
+                }
+            }
+            games.append(game_dict)
+        
+        return games
+    except Exception:
         return []
-    
-    return data["games"]
 
 
-def fetch_player_stats(http: ChessComHttpClient, username: str) -> dict:
+def fetch_player_stats(username: str) -> dict:
     """
     Fetch player statistics including ratings and rating deviations.
     
     Args:
-        http: HTTP client instance
         username: Chess.com username
         
     Returns:
         Player statistics dictionary
     """
-    url = f"{PUBAPI}/player/{username}/stats"
-    data = http.get_json(url)
-    return data or {}
+    try:
+        response = chessdotcom.get_player_stats(username)
+        if not response or not hasattr(response, 'json'):
+            return {}
+        return response.json.get('stats', {})
+    except Exception:
+        return {}
 
 
-def fetch_player_profile(http: ChessComHttpClient, username: str) -> dict:
+def fetch_player_profile(username: str) -> dict:
     """
     Fetch player profile information including avatar.
     
     Args:
-        http: HTTP client instance
         username: Chess.com username
         
     Returns:
         Player profile dictionary
     """
-    url = f"{PUBAPI}/player/{username}"
-    data = http.get_json(url)
-    return data or {}
+    try:
+        response = chessdotcom.get_player_profile(username)
+        if not response or not hasattr(response, 'json'):
+            return {}
+        return response.json.get('player', {})
+    except Exception:
+        return {}
 
 
 def month_urls_for_window(
@@ -204,7 +270,6 @@ def month_urls_for_window(
 
 
 def fetch_games_in_window(
-    http: ChessComHttpClient,
     username: str,
     start_time: int,
     end_time: int
@@ -213,7 +278,6 @@ def fetch_games_in_window(
     Fetch all games for a player within the specified time window.
     
     Args:
-        http: HTTP client instance
         username: Chess.com username
         start_time: Window start timestamp
         end_time: Window end timestamp
@@ -221,7 +285,7 @@ def fetch_games_in_window(
     Returns:
         List of game dictionaries sorted by end_time
     """
-    archives = fetch_player_archives(http, username)
+    archives = fetch_player_archives(username)
     if not archives:
         return []
     
@@ -231,7 +295,7 @@ def fetch_games_in_window(
     # Fetch games from relevant archives
     all_games = []
     for archive_url in relevant_urls:
-        games = fetch_month_games(http, archive_url)
+        games = fetch_month_games(archive_url)
         all_games.extend(games)
     
     # Filter games to the exact time window

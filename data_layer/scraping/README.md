@@ -1,13 +1,16 @@
 # Interesting Chess Data Scraper
 
-A modular Python application that analyzes Chess.com titled players to identify statistically interesting consecutive win streaks. This tool fetches player data, calculates win probabilities using Glicko/Elo rating systems, and outputs JSON data for frontend consumption.
+A modular Python application that analyzes Chess.com titled players to identify statistically interesting consecutive win streaks. This tool fetches player data using the official `chess.com` Python module, calculates win probabilities using Glicko/Elo rating systems, and outputs JSON data for frontend consumption.
+
+> **📋 Migration Notice**: This application has been updated to use the official `chess.com` Python module instead of custom HTTP requests. See `MIGRATION.md` for details about the changes and benefits.
 
 ## Features
 
+- **Official Chess.com API Integration**: Uses the official `chess.com` Python module for reliable API interactions
 - **Modular Architecture**: Clean separation of concerns across multiple modules
 - **Rating-Based Probability**: Uses Glicko rating system with RD (rating deviation) when available, falls back to Elo
 - **Statistical Analysis**: Identifies streaks with very low probability of occurrence (≤5%, ≤1%, ≤0.1%, ≤0.01%)
-- **Rate-Limited API Client**: Respects Chess.com API guidelines with serial requests and proper backoff
+- **Automatic Rate Limiting**: Built-in rate limiting and retry logic handled by the official module
 - **Docker Support**: Ready for deployment on AWS Batch or other container platforms
 - **Comprehensive Logging**: Detailed progress tracking and error handling
 
@@ -19,13 +22,13 @@ scraping/
 ├── main.py                  # Main application entry point
 ├── config.py                # Configuration constants
 ├── models.py                # Data classes and models
-├── http_client.py           # Chess.com API HTTP client
-├── chess_api.py             # Chess.com API interaction functions
+├── chess_api.py             # Chess.com API interaction using official module
 ├── probability.py           # Rating probability calculations
 ├── streak_analyzer.py       # Game analysis and streak detection
-├── requirements.txt         # Python dependencies
+├── requirements.txt         # Python dependencies (includes chess.com module)
 ├── Dockerfile              # Container configuration
 ├── .dockerignore           # Docker ignore rules
+├── MIGRATION.md            # Documentation of migration to chess.com module
 └── README.md               # This file
 ```
 
@@ -51,6 +54,11 @@ scraping/
    ```bash
    pip install -r requirements.txt
    ```
+   
+   This will install:
+   - `chess.com==3.11.1` - Official Chess.com API client
+   - `requests==2.32.5` - HTTP client (used by chess.com module)
+   - `python-dateutil==2.9.0.post0` - Date parsing utilities
 
 ### Docker
 
@@ -78,7 +86,6 @@ python main.py [OPTIONS]
 **Optional:**
 - `--days`: Analysis window in days (default: 30)
 - `--out`: Output directory (default: ./data)
-- `--sleep`: Seconds between API requests (default: 0.25)
 - `--titles`: Comma-separated chess titles (default: all titled players)
 - `--limit-players`: Limit number of players for testing
 - `--verbose`: Enable detailed logging
@@ -102,7 +109,7 @@ python main.py
 python main.py --days 7 --titles "GM,IM" --limit-players 50 --verbose
 
 # Production run with custom output
-python main.py --days 60 --out /path/to/output --sleep 0.5
+python main.py --days 60 --out /path/to/output
 ```
 
 ### Environment Variables
@@ -259,13 +266,14 @@ aws batch submit-job \
 
 ## API Guidelines Compliance
 
-This application strictly follows Chess.com's Public API guidelines:
+This application strictly follows Chess.com's Public API guidelines by using the official `chess.com` Python module:
 
+- **Official Module**: Uses Chess.com's recommended API client
+- **Automatic Rate Limiting**: Built-in rate limiting handled by the module
 - **Serial Access**: All requests are made sequentially, never in parallel
-- **Rate Limiting**: Configurable delays between requests (default: 0.25s)
 - **User-Agent**: Proper identification with contact information
 - **Backoff Strategy**: Exponential backoff for rate-limited responses (429)
-- **Error Handling**: Graceful handling of temporary failures
+- **Error Handling**: Graceful handling of temporary failures with retry logic
 
 ## Development
 
@@ -273,8 +281,7 @@ This application strictly follows Chess.com's Public API guidelines:
 
 - **`config.py`**: Constants and configuration values
 - **`models.py`**: Data classes for type safety and structure
-- **`http_client.py`**: Rate-limited HTTP client for Chess.com API
-- **`chess_api.py`**: High-level API interaction functions
+- **`chess_api.py`**: High-level API interaction using official chess.com module
 - **`probability.py`**: Statistical probability calculations
 - **`streak_analyzer.py`**: Core game analysis and streak detection logic
 - **`main.py`**: Application orchestration and CLI interface
@@ -285,6 +292,14 @@ This application strictly follows Chess.com's Public API guidelines:
 # Test with a small subset
 APP_NAME="test-chess" VERSION="0.1" USERNAME="test-user" EMAIL="test@example.com" \
 python main.py --days 3 --titles "GM" --limit-players 10 --verbose
+
+# Test chess.com module integration
+python -c "
+from chess_api import setup_chess_client, fetch_titled_players
+setup_chess_client('TestApp/1.0 (contact: test@example.com)')
+players = fetch_titled_players(['GM'], verbose=False)
+print(f'Found {len(players)} GM players')
+"
 
 # Validate Docker build
 docker build -t test-scraper .
@@ -303,7 +318,7 @@ docker run test-scraper --help
 ### Common Issues
 
 1. **Rate Limiting (429 errors)**:
-   - Increase `--sleep` parameter
+   - The chess.com module handles this automatically with exponential backoff
    - Check your network connection
    - Verify you're not running multiple instances
 
@@ -315,14 +330,14 @@ docker run test-scraper --help
    - For large datasets, consider processing in smaller batches
    - Use `--limit-players` for testing
 
-4. **Docker permissions**:
-   - Ensure output directory is writable
-   - Check user permissions in container
+4. **Import errors**:
+   - Ensure `chess.com` module is installed: `pip install chess.com==3.11.1`
+   - Check that all dependencies from requirements.txt are installed
 
 ### Performance Tips
 
 - Use `--limit-players` for testing
-- Adjust `--sleep` based on your use case (faster = higher rate limit risk)
+- The chess.com module handles rate limiting automatically
 - Monitor memory usage for large datasets
 - Consider running analysis for shorter time windows
 

@@ -36,9 +36,9 @@ from chess_api import (
     fetch_player_stats,
     fetch_titled_players,
     parse_time_window,
+    setup_chess_client,
 )
-from config import DEFAULT_SLEEP, THRESHOLDS, TITLE_ABBREVS
-from http_client import ChessComHttpClient
+from config import THRESHOLDS, TITLE_ABBREVS
 from models import StreakSummary
 from streak_analyzer import analyze_player_streaks
 
@@ -128,10 +128,6 @@ Examples:
         help="Output directory (default: ./data)"
     )
     parser.add_argument(
-        "--sleep", type=float, default=DEFAULT_SLEEP,
-        help=f"Sleep seconds between requests (default: {DEFAULT_SLEEP})"
-    )
-    parser.add_argument(
         "--titles", type=str, default=",".join(TITLE_ABBREVS),
         help="Comma-separated titles to include"
     )
@@ -149,9 +145,9 @@ Examples:
     # Setup output directory
     os.makedirs(args.out, exist_ok=True)
 
-    # Setup HTTP client
+    # Setup chess.com client
     user_agent = setup_user_agent()
-    http = ChessComHttpClient(user_agent=user_agent, sleep_s=args.sleep)
+    setup_chess_client(user_agent)
 
     # Parse time window
     start_time, end_time = parse_time_window(args.days)
@@ -163,7 +159,7 @@ Examples:
 
     # Fetch titled players
     title_list = [title.strip().upper() for title in args.titles.split(",") if title.strip()]
-    titled_players = fetch_titled_players(http, title_list, verbose=args.verbose)
+    titled_players = fetch_titled_players(title_list, verbose=args.verbose)
     player_usernames = sorted(titled_players.keys())
     
     if args.limit_players is not None:
@@ -181,20 +177,20 @@ Examples:
         try:
             # Get player info
             title = titled_players.get(username)
-            profile = fetch_player_profile(http, username)
-            stats = fetch_player_stats(http, username)
+            profile = fetch_player_profile(username)
+            stats = fetch_player_stats(username)
             
             player_info = create_player_info(username, title, profile, stats)
             
             # Get games in time window
-            games = fetch_games_in_window(http, username, start_time, end_time)
+            games = fetch_games_in_window(username, start_time, end_time)
             if not games:
                 processed_count += 1
                 continue
 
             # Analyze streaks
             streaks = analyze_player_streaks(
-                player_info, games, stats_cache, http, THRESHOLDS, args.verbose
+                player_info, games, stats_cache, THRESHOLDS, args.verbose
             )
             all_streaks.extend(streaks)
             processed_count += 1
