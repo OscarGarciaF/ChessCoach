@@ -1,8 +1,8 @@
 # Interesting Chess Data Scraper
 
-A modular Python application that analyzes Chess.com titled players to identify statistically interesting consecutive win streaks. This tool fetches player data using the official `chess.com` Python module, calculates win probabilities using Glicko/Elo rating systems, and outputs JSON data for frontend consumption.
+A modular Python application that analyzes Chess.com titled players to identify statistically interesting consecutive win streaks. This tool fetches player data using the  [`chess.com` Python module](https://github.com/sarartur/chess.com), calculates win probabilities using Glicko/Elo rating systems, and outputs JSON data for frontend consumption.
 
-> **📋 Migration Notice**: This application has been updated to use the official `chess.com` Python module instead of custom HTTP requests. See `MIGRATION.md` for details about the changes and benefits.
+
 
 ## Features
 
