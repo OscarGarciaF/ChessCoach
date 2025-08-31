@@ -12,7 +12,6 @@ PUBAPI = "https://api.chess.com/pub"
 
 # Available chess titles in order of preference (highest first)
 TITLE_ABBREVS = ["GM", "WGM", "IM", "WIM", "FM", "WFM", "NM", "WNM", "CM", "WCM"]
-
 # Probability thresholds for classifying interesting streaks
 # Format: (label, decimal_probability)
 THRESHOLDS: List[Tuple[str, float]] = [
@@ -26,7 +25,7 @@ THRESHOLDS: List[Tuple[str, float]] = [
 TITLE_RANK = {t: i for i, t in enumerate(TITLE_ABBREVS, start=1)}
 
 # Default sleep time between API requests (seconds)
-DEFAULT_SLEEP = 0.25
+DEFAULT_SLEEP = 0
 
 # HTTP request configuration
 DEFAULT_TIMEOUT = 20

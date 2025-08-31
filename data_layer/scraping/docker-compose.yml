@@ -9,14 +9,13 @@ services:
     environment:
       - APP_NAME=${APP_NAME:-interesting-chess}
       - VERSION=${VERSION:-1.0}
-      - USERNAME=${USERNAME:-dev-user}
-      - EMAIL=${EMAIL:-dev@example.com}
+      - USERNAME=${USERNAME:-alienoscar}
+      - EMAIL=${EMAIL:-garcia.oscar1729@gmail.com}
       - IC_OUTPUT_DIR=/app/data
     volumes:
       - ./data:/app/data
     command: >
       --days 7 
-      --titles "GM,IM" 
       --limit-players 10 
       --verbose
     restart: "no"
