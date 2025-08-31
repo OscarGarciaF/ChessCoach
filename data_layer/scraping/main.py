@@ -42,22 +42,20 @@ from http_client import ChessComHttpClient
 from models import StreakSummary
 from streak_analyzer import analyze_player_streaks
 
-def setup_user_agent(contact_info: str) -> str:
+def setup_user_agent() -> str:
     """
     Create a proper User-Agent string for Chess.com API requests.
+    Uses the format: APP_NAME/VERSION (username: USERNAME; contact: EMAIL)
     
-    Args:
-        contact_info: Contact information to include in User-Agent
-        
     Returns:
         Formatted User-Agent string
     """
-    if contact_info.strip():
-        return f"interesting-chess/1.0 ({contact_info.strip()})"
-    else:
-        print("[WARN] No contact info set. Set --contact or IC_USER_AGENT to be a good API citizen.", 
-              file=sys.stderr)
-        return "interesting-chess/1.0 (contact: set IC_USER_AGENT env or --contact)"
+    app_name = os.environ.get("APP_NAME", "interesting-chess")
+    version = os.environ.get("VERSION", "0.0")
+    username = os.environ.get("USERNAME", "alienoscar")
+    email = os.environ.get("EMAIL", "garcia.oscar1729@gmail.com")
+
+    return f"{app_name}/{version} (username: {username}; contact: {email})"
 
 
 def serialize_streak_for_output(streak):
@@ -142,10 +140,6 @@ Examples:
         help="Limit number of players for testing"
     )
     parser.add_argument(
-        "--contact", type=str, default=None,
-        help='Contact info for User-Agent (e.g., "Your Name <you@example.com>")'
-    )
-    parser.add_argument(
         "--verbose", action="store_true",
         help="Enable verbose logging"
     )
@@ -156,8 +150,7 @@ Examples:
     os.makedirs(args.out, exist_ok=True)
 
     # Setup HTTP client
-    contact = args.contact or os.environ.get("IC_USER_AGENT", "")
-    user_agent = setup_user_agent(contact)
+    user_agent = setup_user_agent()
     http = ChessComHttpClient(user_agent=user_agent, sleep_s=args.sleep)
 
     # Parse time window

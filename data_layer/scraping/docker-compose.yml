@@ -7,7 +7,10 @@ services:
       dockerfile: Dockerfile
     container_name: interesting-chess-scraper
     environment:
-      - IC_USER_AGENT=${IC_USER_AGENT:-Development Bot <dev@example.com>}
+      - APP_NAME=${APP_NAME:-interesting-chess}
+      - VERSION=${VERSION:-1.0}
+      - USERNAME=${USERNAME:-dev-user}
+      - EMAIL=${EMAIL:-dev@example.com}
       - IC_OUTPUT_DIR=/app/data
     volumes:
       - ./data:/app/data

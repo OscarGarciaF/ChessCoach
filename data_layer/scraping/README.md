@@ -61,8 +61,10 @@ scraping/
 
 2. **Run with Docker:**
    ```bash
-   docker run -v $(pwd)/data:/app/data interesting-chess-scraper \
-     --days 30 --contact "Your Name <you@example.com>"
+   docker run -v $(pwd)/data:/app/data \
+     -e USERNAME="your_username" \
+     -e EMAIL="you@example.com" \
+     interesting-chess-scraper --days 30
    ```
 
 ## Usage
@@ -72,9 +74,6 @@ scraping/
 ```bash
 python main.py [OPTIONS]
 ```
-
-**Required:**
-- `--contact`: Your contact information for the User-Agent (be a good API citizen!)
 
 **Optional:**
 - `--days`: Analysis window in days (default: 30)
@@ -86,26 +85,38 @@ python main.py [OPTIONS]
 
 **Examples:**
 
+Set environment variables first:
+```bash
+export APP_NAME="interesting-chess"
+export VERSION="1.0"
+export USERNAME="your_username"
+export EMAIL="you@example.com"
+```
+
+Then run:
 ```bash
 # Basic usage - analyze last 30 days for all titled players
-python main.py --contact "Your Name <you@example.com>"
+python main.py
 
 # Quick test with fewer players
-python main.py --days 7 --titles "GM,IM" --limit-players 50 --verbose \
-  --contact "Your Name <you@example.com>"
+python main.py --days 7 --titles "GM,IM" --limit-players 50 --verbose
 
 # Production run with custom output
-python main.py --days 60 --out /path/to/output --sleep 0.5 \
-  --contact "Production Bot <admin@yoursite.com>"
+python main.py --days 60 --out /path/to/output --sleep 0.5
 ```
 
 ### Environment Variables
 
-You can set contact info via environment variable:
+You can set user agent information via environment variables:
 ```bash
-export IC_USER_AGENT="Your Name <you@example.com>"
+export APP_NAME="interesting-chess"
+export VERSION="1.0"
+export USERNAME="your_username"
+export EMAIL="you@example.com"
 python main.py --days 30
 ```
+
+The user agent will be formatted as: `APP_NAME/VERSION (username: USERNAME; contact: EMAIL)`
 
 ## Output Format
 
@@ -214,7 +225,10 @@ When RD is unavailable:
     "memory": 2048,
     "jobRoleArn": "arn:aws:iam::account:role/BatchJobRole",
     "environment": [
-      {"name": "IC_USER_AGENT", "value": "Production Bot <admin@yoursite.com>"}
+      {"name": "APP_NAME", "value": "interesting-chess"},
+      {"name": "VERSION", "value": "1.0"},
+      {"name": "USERNAME", "value": "production"},
+      {"name": "EMAIL", "value": "admin@yoursite.com"}
     ],
     "mountPoints": [
       {
@@ -269,8 +283,8 @@ This application strictly follows Chess.com's Public API guidelines:
 
 ```bash
 # Test with a small subset
-python main.py --days 3 --titles "GM" --limit-players 10 --verbose \
-  --contact "Test <test@example.com>"
+APP_NAME="test-chess" VERSION="0.1" USERNAME="test-user" EMAIL="test@example.com" \
+python main.py --days 3 --titles "GM" --limit-players 10 --verbose
 
 # Validate Docker build
 docker build -t test-scraper .
