@@ -378,9 +378,17 @@ def create_player_info(
     Returns:
         PlayerInfo object with extracted data
     """
+    # Extract country code from Chess.com country URL
+    country = profile.get("country")
+    country_code = None
+    if country and isinstance(country, str):
+        # Country comes as "https://api.chess.com/pub/country/XX" where XX is the country code
+        country_code = country.split("/")[-1] if "/" in country else country
+    
     return PlayerInfo(
         username=username,
         title=title,
         avatar=profile.get("avatar"),
-        max_rating=extract_max_rating(stats)
+        max_rating=extract_max_rating(stats),
+        country=country_code
     )

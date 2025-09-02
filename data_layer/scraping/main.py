@@ -61,11 +61,8 @@ def setup_user_agent() -> str:
 def serialize_streak_for_output(streak):
     """Convert a Streak object to JSON-serializable format."""
     return {
-        "player": {
-            "username": streak.player.username,
-            "title": streak.player.title,
-            "avatar": streak.player.avatar
-        },
+        "username": streak.player.username,
+        "player_title": streak.player.title,
         "player_max_rating": streak.player.max_rating,
         "streak": {
             "length": streak.length,
@@ -136,7 +133,7 @@ Examples:
         help="Limit number of players for testing"
     )
     parser.add_argument(
-        "--verbose", action="store_true",
+        "--verbose", action="store_true", default=True,
         help="Enable verbose logging"
     )
     
@@ -172,6 +169,8 @@ Examples:
     all_streaks = []
     stats_cache: Dict[str, dict] = {}
     processed_count = 0
+    total_games_processed = 0
+    players_data = {}
 
     for username in player_usernames:
         try:
@@ -182,11 +181,23 @@ Examples:
             
             player_info = create_player_info(username, title, profile, stats)
             
+            # Store player data
+            players_data[username] = {
+                "username": player_info.username,
+                "title": player_info.title,
+                "avatar": player_info.avatar,
+                "max_rating": player_info.max_rating,
+                "country": player_info.country
+            }
+            
             # Get games in time window
             games = fetch_games_in_window(username, start_time, end_time)
             if not games:
                 processed_count += 1
                 continue
+
+            # Count games processed
+            total_games_processed += len(games)
 
             # Analyze streaks
             streaks = analyze_player_streaks(
@@ -197,7 +208,8 @@ Examples:
 
             if args.verbose and (processed_count % 25 == 0):
                 print(f"[INFO] Processed {processed_count}/{len(player_usernames)} players; "
-                      f"found {len(all_streaks)} interesting streaks so far")
+                      f"found {len(all_streaks)} interesting streaks so far; "
+                      f"processed {total_games_processed} games")
 
         except Exception as e:
             print(f"[ERROR] Failed to process player {username}: {e}", file=sys.stderr)
@@ -214,28 +226,35 @@ Examples:
     # Serialize results
     output_streaks = [serialize_streak_for_output(streak) for streak in all_streaks]
     
-    streaks_file = os.path.join(args.out, "interesting_streaks.json")
-    with open(streaks_file, "w", encoding="utf-8") as f:
-        json.dump(output_streaks, f, ensure_ascii=False, separators=(",", ":"), indent=2)
-
-    # Create summary
-    summary = StreakSummary(
-        window_days=args.days,
-        players_processed=processed_count,
-        streaks_found=len(all_streaks),
-        counts_by_threshold=calculate_threshold_counts(all_streaks),
-        generated_at=int(time.time())
-    )
+    # Additional sort for output to ensure consistent ordering by player_max_rating first
+    output_streaks.sort(key=lambda streak: (-streak["player_max_rating"], streak["streak"]["prob"]))
     
-    summary_file = os.path.join(args.out, "summary.json")
-    with open(summary_file, "w", encoding="utf-8") as f:
-        json.dump(summary.__dict__, f, ensure_ascii=False, separators=(",", ":"), indent=2)
+    # Create summary with games count
+    summary = {
+        "window_days": args.days,
+        "players_processed": processed_count,
+        "games_processed": total_games_processed,
+        "streaks_found": len(all_streaks),
+        "counts_by_threshold": calculate_threshold_counts(all_streaks),
+        "generated_at": int(time.time())
+    }
+    
+    # Create combined results file with three levels
+    results = {
+        "summary": summary,
+        "players": players_data,
+        "interesting_streaks": output_streaks
+    }
+    
+    results_file = os.path.join(args.out, "results.json")
+    with open(results_file, "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, separators=(",", ":"), indent=2)
 
     # Print results
     print(f"[DONE] Processed {processed_count} players")
+    print(f"[DONE] Processed {total_games_processed} games")
     print(f"[DONE] Found {len(all_streaks)} interesting streaks")
-    print(f"[DONE] Output written to: {streaks_file}")
-    print(f"[DONE] Summary written to: {summary_file}")
+    print(f"[DONE] Results written to: {results_file}")
 
 
 if __name__ == "__main__":

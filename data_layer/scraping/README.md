@@ -127,60 +127,97 @@ The user agent will be formatted as: `APP_NAME/VERSION (username: USERNAME; cont
 
 ## Output Format
 
-The application generates two JSON files:
+The application generates a single `results.json` file with three main sections:
 
-### `interesting_streaks.json`
-
-Array of streak objects with this structure:
+### Structure Overview
 
 ```json
 {
-  "player": {
-    "username": "chess_player",
-    "title": "GM",
-    "avatar": "https://images.chesscomfiles.com/..."
-  },
-  "player_max_rating": 2750,
-  "streak": {
-    "length": 8,
-    "prob": 0.0023,
-    "threshold": "≤0.1%",
-    "start_time": 1693440000,
-    "end_time": 1693526400,
-    "games": [
-      {
-        "end_time": 1693440000,
-        "rules": "chess",
-        "time_class": "blitz",
-        "opponent": {
-          "username": "opponent_name",
-          "rating": 2650
-        },
-        "winner_rating": 2740,
-        "p_win": 0.62,
-        "url": "https://www.chess.com/game/live/12345"
-      }
-    ]
+  "summary": { ... },
+  "players": { ... },
+  "interesting_streaks": [ ... ]
+}
+```
+
+### Summary Section
+
+Contains aggregate statistics about the analysis run:
+
+```json
+{
+  "summary": {
+    "window_days": 30,
+    "players_processed": 1250,
+    "games_processed": 45203,
+    "streaks_found": 42,
+    "counts_by_threshold": {
+      "≤5%": 15,
+      "≤1%": 8,
+      "≤0.1%": 3,
+      "≤0.01%": 1
+    },
+    "generated_at": 1693612800
   }
 }
 ```
 
-### `summary.json`
+### Players Section
 
-Aggregate statistics:
+Dictionary of all processed players with their information:
 
 ```json
 {
-  "window_days": 30,
-  "players_processed": 1250,
-  "streaks_found": 42,
-  "counts_by_threshold": {
-    "≤5%": 15,
-    "≤1%": 8,
-    "≤0.1%": 3,
-    "≤0.01%": 1
-  },
-  "generated_at": 1693612800
+  "players": {
+    "chess_player": {
+      "username": "chess_player",
+      "title": "GM",
+      "avatar": "https://images.chesscomfiles.com/...",
+      "max_rating": 2750
+    },
+    "another_player": {
+      "username": "another_player",
+      "title": "IM",
+      "avatar": null,
+      "max_rating": 2650
+    }
+  }
+}
+```
+
+### Interesting Streaks Section
+
+Array of streak objects with detailed information:
+
+```json
+{
+  "interesting_streaks": [
+    {
+      "username": "chess_player",
+      "player_title": "GM",
+      "player_max_rating": 2750,
+      "streak": {
+        "length": 8,
+        "prob": 0.0023,
+        "threshold": "≤0.1%",
+        "start_time": 1693440000,
+        "end_time": 1693526400,
+        "games": [
+          {
+            "end_time": 1693440000,
+            "rules": "chess",
+            "time_class": "blitz",
+            "opponent": {
+              "username": "opponent_name",
+              "rating": 2650
+            },
+            "winner_rating": 2740,
+            "p_win": 0.62,
+            "url": "https://www.chess.com/game/live/12345"
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 

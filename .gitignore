@@ -8,3 +8,4 @@ __pycache__
 **/__pycache__
 **/__pycache__/**
 data_layer/scraping/data/**
+.venv/**

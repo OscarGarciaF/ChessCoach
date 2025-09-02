@@ -44,11 +44,13 @@ class PlayerInfo:
         title: Chess title (GM, IM, etc.)
         avatar: URL to player's avatar image
         max_rating: Highest rating across all time controls
+        country: Player's country code
     """
     username: str
     title: Optional[str] = None
     avatar: Optional[str] = None
     max_rating: Optional[int] = None
+    country: Optional[str] = None
 
 
 @dataclass
