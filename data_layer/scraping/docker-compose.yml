@@ -7,11 +7,13 @@ services:
       dockerfile: Dockerfile
     container_name: interesting-chess-scraper
     environment:
-      - APP_NAME=${APP_NAME:-interesting-chess}
-      - VERSION=${VERSION:-1.0}
-      - USERNAME=${USERNAME:-alienoscar}
-      - EMAIL=${EMAIL:-garcia.oscar1729@gmail.com}
-      - IC_OUTPUT_DIR=/app/data
+      APP_NAME: ${APP_NAME:-interesting-chess}
+      VERSION: ${VERSION:-1.0}
+      USERNAME: ${USERNAME:-alienoscar}
+      EMAIL: ${EMAIL:-garcia.oscar1729@gmail.com}
+      IC_OUTPUT_DIR: /app/data
+      S3_LOCATION: ${S3_LOCATION:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
     volumes:
       - ./data:/app/data
     command: >

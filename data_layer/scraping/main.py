@@ -27,6 +27,7 @@ import json
 import os
 import sys
 import time
+from urllib.parse import urlparse
 from typing import Dict, List
 
 from chess_api import (
@@ -41,6 +42,37 @@ from chess_api import (
 from config import THRESHOLDS, TITLE_ABBREVS
 from models import StreakSummary
 from streak_analyzer import analyze_player_streaks
+
+def _upload_results_to_s3(local_path: str, s3_location: str, verbose: bool = True) -> None:
+    """
+    Upload the results file to an S3 location if configured.
+
+    S3_LOCATION must be of the form s3://<bucket>/<key or prefix>/
+    If a prefix (ending with "/") is provided, the basename of local_path will be appended.
+    """
+    try:
+        parsed = urlparse(s3_location)
+        if parsed.scheme != "s3" or not parsed.netloc:
+            raise ValueError("S3_LOCATION must be like s3://bucket/path or s3://bucket/path/")
+
+        bucket = parsed.netloc
+        key = parsed.path.lstrip("/")
+        if not key or key.endswith("/"):
+            # treat as prefix
+            key = (key or "") + os.path.basename(local_path)
+
+        # Lazy import to avoid hard dependency at import time
+        import boto3  # type: ignore
+        from botocore.exceptions import BotoCoreError, ClientError  # type: ignore
+
+        s3 = boto3.client("s3")
+        if verbose:
+            print(f"[INFO] Uploading {local_path} to s3://{bucket}/{key}")
+        s3.upload_file(local_path, bucket, key)
+        if verbose:
+            print(f"[DONE] Uploaded to s3://{bucket}/{key}")
+    except Exception as e:  # broaden to catch import and boto errors
+        print(f"[WARN] Skipped S3 upload due to error: {e}", file=sys.stderr)
 
 def setup_user_agent() -> str:
     """
@@ -249,6 +281,14 @@ Examples:
     results_file = os.path.join(args.out, "results.json")
     with open(results_file, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, separators=(",", ":"), indent=2)
+
+    # Optional: upload to S3 if configured
+    s3_location = os.environ.get("S3_LOCATION")
+    if s3_location:
+        _upload_results_to_s3(results_file, s3_location, verbose=args.verbose)
+    else:
+        if args.verbose:
+            print("[INFO] S3_LOCATION not set; skipping S3 upload")
 
     # Print results
     print(f"[DONE] Processed {processed_count} players")

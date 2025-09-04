@@ -125,6 +125,26 @@ python main.py --days 30
 
 The user agent will be formatted as: `APP_NAME/VERSION (username: USERNAME; contact: EMAIL)`
 
+#### Optional S3 Upload
+
+If you want the generated `results.json` to be uploaded to Amazon S3 automatically, set the `S3_LOCATION` environment variable. If not set, the upload is skipped.
+
+- `S3_LOCATION` must be in the form `s3://<bucket>/<key>` or `s3://<bucket>/<prefix>/` (if a prefix is provided, the file name `results.json` is appended).
+- AWS authentication follows standard boto3 credential resolution (env vars, shared credentials file, IAM role, etc.). You may also set `AWS_REGION` if needed.
+
+Examples:
+```bash
+export S3_LOCATION="s3://my-bucket/interesting-chess/"
+export AWS_REGION="us-east-1"  # optional, if not already configured
+python main.py --days 7 --out ./data
+```
+
+With Docker Compose, you can pass these in `.env`:
+```env
+S3_LOCATION=s3://my-bucket/interesting-chess/
+AWS_REGION=us-east-1
+```
+
 ## Output Format
 
 The application generates a single `results.json` file with three main sections:
