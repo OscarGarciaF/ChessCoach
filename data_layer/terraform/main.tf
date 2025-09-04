@@ -18,7 +18,10 @@ variable "project_name"       { type = string, default = "interesting-chess" }
 variable "aws_region"         { type = string, default = "us-east-1" }
 
 # Data/config passed to the container/script
-variable "contact_info"       { type = string }  # e.g., "Your Name <you@example.com>"
+variable "app_name"           { type = string,  default = "interesting-chess" }
+variable "version"            { type = string,  default = "1.0.0" }
+variable "username"           { type = string,  default = "alienoscar" }
+variable "email"              { type = string,  default = "garcia.oscar1729@gmail.com" }
 variable "titles"             { type = string,  default = "GM,WGM,IM,WIM,FM,WFM,NM,WNM,CM,WCM" }
 variable "days_window"        { type = number,  default = 30 }
 variable "request_sleep_s"    { type = number,  default = 0.25 }
@@ -30,15 +33,15 @@ variable "schedule_expression"{ type = string,  default = "cron(5 3 * * ? *)" }
 # Optional CloudFront
 variable "create_cloudfront"  { type = bool,    default = true }
 
-# Path to your python file on local disk
-variable "script_local_path"  { type = string,  default = "${path.module}/interesting_chess.py" }
+# Path to your python scraping directory on local disk
+variable "scraping_dir_path"  { type = string,  default = "${path.module}/../scraping" }
 
 locals {
   short         = replace(lower(var.project_name), "/[^a-z0-9-]/", "-")
   suffix        = random_id.sfx.hex
   bucket_name   = "${local.short}-data-${local.suffix}"
   latest_prefix = "latest"
-  code_key      = "code/interesting_chess.py"
+  code_prefix   = "code"
 }
 
 resource "random_id" "sfx" { byte_length = 3 }
@@ -70,12 +73,19 @@ resource "aws_s3_bucket_cors_configuration" "data" {
   }
 }
 
-# Upload the Python script for the Batch job to download
-resource "aws_s3_object" "script" {
+# Upload the Python scraping files for the Batch job to download
+data "archive_file" "scraping_code" {
+  type        = "zip"
+  source_dir  = var.scraping_dir_path
+  output_path = "${path.module}/scraping.zip"
+  excludes    = ["__pycache__", "*.pyc", "data", ".dockerignore"]
+}
+
+resource "aws_s3_object" "scraping_code" {
   bucket = aws_s3_bucket.data.id
-  key    = local.code_key
-  source = var.script_local_path
-  etag   = filemd5(var.script_local_path)
+  key    = "${local.code_prefix}/scraping.zip"
+  source = data.archive_file.scraping_code.output_path
+  etag   = filemd5(data.archive_file.scraping_code.output_path)
 }
 
 ########################
@@ -227,7 +237,7 @@ resource "aws_iam_role_policy" "job_role_policy" {
       {
         Sid="ReadCode", Effect="Allow",
         Action=["s3:GetObject"],
-        Resource="${aws_s3_bucket.data.arn}/${local.code_key}"
+        Resource="${aws_s3_bucket.data.arn}/${local.code_prefix}/*"
       },
       {
         Sid="WriteOutputs", Effect="Allow",
@@ -304,26 +314,30 @@ resource "aws_batch_job_definition" "job" {
     memory      = 1024
     jobRoleArn  = aws_iam_role.job_role.arn
     environment = [
-      { name = "IC_CONTACT",          value = var.contact_info },
-      { name = "IC_TITLES",           value = var.titles },
-      { name = "IC_DAYS",             value = tostring(var.days_window) },
-      { name = "IC_SLEEP",            value = tostring(var.request_sleep_s) },
-      { name = "IC_LIMIT_PLAYERS",    value = tostring(var.limit_players) },
+      { name = "APP_NAME",            value = var.app_name },
+      { name = "VERSION",             value = var.version },
+      { name = "USERNAME",            value = var.username },
+      { name = "EMAIL",               value = var.email },
       { name = "BUCKET",              value = aws_s3_bucket.data.bucket },
       { name = "PREFIX",              value = local.latest_prefix },
-      { name = "SCRIPT_KEY",          value = local.code_key }
+      { name = "CODE_PREFIX",         value = local.code_prefix },
+      { name = "S3_LOCATION",         value = "s3://${aws_s3_bucket.data.bucket}/${local.latest_prefix}/" },
+      { name = "AWS_ACCESS_KEY_ID",   value = aws_iam_access_key.batch_user_key.id },
+      { name = "AWS_SECRET_ACCESS_KEY", value = aws_iam_access_key.batch_user_key.secret },
+      { name = "AWS_REGION",  value = var.aws_region },
+      { name = "AWS_DEFAULT_REGION",  value = var.aws_region }
     ]
     command = [
       "bash","-lc", <<-EOC
         set -euo pipefail
-        apt-get update -y && apt-get install -y --no-install-recommends awscli ca-certificates curl && rm -rf /var/lib/apt/lists/*
+        apt-get update -y && apt-get install -y --no-install-recommends awscli ca-certificates curl unzip && rm -rf /var/lib/apt/lists/*
         python -m pip install --no-cache-dir --upgrade pip
-        python -m pip install --no-cache-dir requests python-dateutil
-        mkdir -p /app/out
-        aws s3 cp "s3://$${BUCKET}/$${SCRIPT_KEY}" /app/interesting_chess.py
-        chmod +x /app/interesting_chess.py
-        python /app/interesting_chess.py --out /app/out
-        aws s3 sync /app/out "s3://$${BUCKET}/$${PREFIX}" --delete
+        python -m pip install --no-cache-dir requests python-dateutil chess.com boto3
+        mkdir -p /app/scraping /app/out
+        aws s3 cp "s3://$${BUCKET}/$${CODE_PREFIX}/scraping.zip" /app/scraping.zip
+        cd /app && unzip scraping.zip -d scraping/
+        cd /app/scraping
+        python main.py --days ${var.days_window} --out /app/out --titles "${var.titles}" ${ var.limit_players > 0 ? "--limit-players ${var.limit_players}" : ""} --verbose
       EOC
     ]
   })
@@ -351,6 +365,43 @@ resource "aws_cloudwatch_event_target" "submit_job" {
 }
 
 ########################
+# IAM User for Programmatic Access (for boto3)
+########################
+
+resource "aws_iam_user" "batch_user" {
+  name = "${local.short}-batch-user-${local.suffix}"
+  path = "/"
+}
+
+resource "aws_iam_access_key" "batch_user_key" {
+  user = aws_iam_user.batch_user.name
+}
+
+resource "aws_iam_user_policy" "batch_user_policy" {
+  name = "${local.short}-batch-user-policy"
+  user = aws_iam_user.batch_user.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:PutObjectAcl",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.data.arn,
+          "${aws_s3_bucket.data.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+########################
 # Outputs
 ########################
 
@@ -360,7 +411,7 @@ output "s3_bucket_name" {
 
 output "cloudfront_domain" {
   value       = var.create_cloudfront ? aws_cloudfront_distribution.cdn[0].domain_name : ""
-  description = "If enabled, fetch https://<domain>/${local.latest_prefix}/interesting_streaks.json"
+  description = "If enabled, fetch https://<domain>/${local.latest_prefix}/results.json"
 }
 
 output "batch_job_queue_arn" {
@@ -369,4 +420,21 @@ output "batch_job_queue_arn" {
 
 output "batch_job_definition_arn" {
   value = aws_batch_job_definition.job.arn
+}
+
+output "aws_access_key_id" {
+  value     = aws_iam_access_key.batch_user_key.id
+  sensitive = false
+  description = "AWS Access Key ID for boto3 authentication"
+}
+
+output "aws_secret_access_key" {
+  value     = aws_iam_access_key.batch_user_key.secret
+  sensitive = true
+  description = "AWS Secret Access Key for boto3 authentication"
+}
+
+output "aws_region" {
+  value = var.aws_region
+  description = "AWS region for boto3 configuration"
 }

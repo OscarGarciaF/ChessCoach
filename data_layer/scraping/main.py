@@ -28,7 +28,7 @@ import os
 import sys
 import time
 from urllib.parse import urlparse
-from typing import Dict, List
+from typing import Dict
 
 from chess_api import (
     create_player_info,
@@ -40,8 +40,8 @@ from chess_api import (
     setup_chess_client,
 )
 from config import THRESHOLDS, TITLE_ABBREVS
-from models import StreakSummary
 from streak_analyzer import analyze_player_streaks
+import boto3
 
 def _upload_results_to_s3(local_path: str, s3_location: str, verbose: bool = True) -> None:
     """
@@ -60,10 +60,6 @@ def _upload_results_to_s3(local_path: str, s3_location: str, verbose: bool = Tru
         if not key or key.endswith("/"):
             # treat as prefix
             key = (key or "") + os.path.basename(local_path)
-
-        # Lazy import to avoid hard dependency at import time
-        import boto3  # type: ignore
-        from botocore.exceptions import BotoCoreError, ClientError  # type: ignore
 
         s3 = boto3.client("s3")
         if verbose:
