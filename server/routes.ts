@@ -23,6 +23,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get summary data for hero section
+  app.get("/api/summary", async (req, res) => {
+    try {
+      const summary = storage.getSummaryData();
+      res.json(summary);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch summary data" });
+    }
+  });
+
   // Get specific streak details
   app.get("/api/streaks/:id", async (req, res) => {
     try {
