@@ -13,3 +13,5 @@ data_layer/scraping/data/**
 **/terraform.plan
 **/.terraform/**
 **/.terraform**
+scraping.zip
+terraform.plan
