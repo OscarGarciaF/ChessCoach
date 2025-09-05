@@ -10,5 +10,6 @@ __pycache__
 data_layer/scraping/data/**
 .venv/**
 **/terraform.tfvars
+**/terraform.plan
 **/.terraform/**
 **/.terraform**

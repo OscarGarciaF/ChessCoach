@@ -7,7 +7,7 @@ aws_region   = "us-east-1"
 
 # Application configuration
 app_name = "interesting-chess"
-version  = "1.0.0"
+app_version  = "1.0.0"
 username = "your-chess-username"
 email    = "your-email@example.com"
 

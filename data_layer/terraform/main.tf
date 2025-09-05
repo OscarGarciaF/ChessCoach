@@ -86,7 +86,7 @@ variable "scraping_dir_path" {
 }
 
 locals {
-  short         = regexreplace(lower(var.project_name), "[^a-z0-9-]", "-")
+  short         = lower(replace(replace(replace(var.project_name, " ", "-"), "_", "-"), ".", "-"))
   suffix        = random_id.sfx.hex
   bucket_name   = "${local.short}-data-${local.suffix}"
   latest_prefix = "latest"
@@ -337,9 +337,10 @@ resource "aws_iam_role_policy" "events_to_batch_policy" {
 ########################
 
 resource "aws_batch_compute_environment" "ec2" {
-  compute_environment_name = "${local.short}-ec2-ce"
-  type                     = "MANAGED"
-  service_role             = aws_iam_role.batch_service.arn
+  # compute_environment_name is not supported in newer provider versions
+  name         = "${local.short}-ec2-ce"
+  type         = "MANAGED"
+  service_role = aws_iam_role.batch_service.arn
 
   compute_resources {
     type                = "EC2"
@@ -348,10 +349,10 @@ resource "aws_batch_compute_environment" "ec2" {
     desired_vcpus       = 0
     max_vcpus           = 1
     instance_role       = aws_iam_instance_profile.ecs_instance_profile.arn
-    instance_types      = ["t2.micro","t3.micro"] # t2.micro is Free Tier–eligible; t3.micro as fallback
+    instance_type      = ["t3.micro"]
     subnets             = data.aws_subnets.default.ids
     security_group_ids  = [aws_security_group.batch_instances.id]
-    tags = { Name = "${local.short}-batch-ec2" }
+    tags                = { Name = "${local.short}-batch-ec2" }
   }
 }
 
@@ -359,7 +360,10 @@ resource "aws_batch_job_queue" "queue" {
   name     = "${local.short}-queue"
   state    = "ENABLED"
   priority = 1
-  compute_environments = [aws_batch_compute_environment.ec2.arn]
+  compute_environment_order {
+    order               = 1
+    compute_environment = aws_batch_compute_environment.ec2.arn
+  }
 }
 
 resource "aws_batch_job_definition" "job" {
