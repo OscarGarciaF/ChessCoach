@@ -1,8 +1,9 @@
 terraform {
   required_version = ">= 1.5.0"
   required_providers {
-    aws    = { source = "hashicorp/aws", version = ">= 5.0" }
+    aws    = { source = "hashicorp/aws",    version = ">= 5.0" }
     random = { source = "hashicorp/random", version = ">= 3.5" }
+    archive = { source = "hashicorp/archive", version = ">= 2.4.0" }
   }
 }
 
@@ -14,34 +15,83 @@ provider "aws" {
 # Variables
 ########################
 
-variable "project_name"       { type = string, default = "interesting-chess" }
-variable "aws_region"         { type = string, default = "us-east-1" }
+variable "project_name" {
+  type    = string
+  default = "interesting-chess"
+}
+
+variable "aws_region" {
+  type    = string
+  default = "us-east-1"
+}
 
 # Data/config passed to the container/script
-variable "app_name"           { type = string,  default = "interesting-chess" }
-variable "version"            { type = string,  default = "1.0.0" }
-variable "username"           { type = string,  default = "alienoscar" }
-variable "email"              { type = string,  default = "garcia.oscar1729@gmail.com" }
-variable "titles"             { type = string,  default = "GM,WGM,IM,WIM,FM,WFM,NM,WNM,CM,WCM" }
-variable "days_window"        { type = number,  default = 30 }
-variable "request_sleep_s"    { type = number,  default = 0.25 }
-variable "limit_players"      { type = number,  default = 0 }   # 0 = no limit
+variable "app_name" {
+  type    = string
+  default = "interesting-chess"
+}
+
+variable "app_version" {
+  type    = string
+  default = "1.0.0"
+}
+
+variable "username" {
+  type    = string
+  default = "alienoscar"
+}
+
+variable "email" {
+  type    = string
+  default = "garcia.oscar1729@gmail.com"
+}
+
+variable "titles" {
+  type    = string
+  default = "GM,WGM,IM,WIM,FM,WFM,NM,WNM,CM,WCM"
+}
+
+variable "days_window" {
+  type    = number
+  default = 30
+}
+
+variable "request_sleep_s" {
+  type    = number
+  default = 0.25
+}
+
+variable "limit_players" {
+  type    = number
+  default = 0
+}   # 0 = no limit
 
 # Schedule: cron(5 3 * * ? *) == 03:05 UTC daily
-variable "schedule_expression"{ type = string,  default = "cron(5 3 * * ? *)" }
+variable "schedule_expression" {
+  type    = string
+  default = "cron(5 3 * * ? *)"
+}
 
 # Optional CloudFront
-variable "create_cloudfront"  { type = bool,    default = true }
+variable "create_cloudfront" {
+  type    = bool
+  default = true
+}
 
 # Path to your python scraping directory on local disk
-variable "scraping_dir_path"  { type = string,  default = "${path.module}/../scraping" }
+variable "scraping_dir_path" {
+  type    = string
+  default = null
+  # Provide a value to override; if null/empty, we fallback to ${path.module}/../scraping in locals
+}
 
 locals {
-  short         = replace(lower(var.project_name), "/[^a-z0-9-]/", "-")
+  short         = regexreplace(lower(var.project_name), "[^a-z0-9-]", "-")
   suffix        = random_id.sfx.hex
   bucket_name   = "${local.short}-data-${local.suffix}"
   latest_prefix = "latest"
   code_prefix   = "code"
+  scraping_dir_path_effective = var.scraping_dir_path != null && var.scraping_dir_path != "" ? var.scraping_dir_path : "${path.module}/../scraping"
 }
 
 resource "random_id" "sfx" { byte_length = 3 }
@@ -76,7 +126,7 @@ resource "aws_s3_bucket_cors_configuration" "data" {
 # Upload the Python scraping files for the Batch job to download
 data "archive_file" "scraping_code" {
   type        = "zip"
-  source_dir  = var.scraping_dir_path
+  source_dir  = local.scraping_dir_path_effective
   output_path = "${path.module}/scraping.zip"
   excludes    = ["__pycache__", "*.pyc", "data", ".dockerignore"]
 }
@@ -163,14 +213,23 @@ resource "aws_s3_bucket_policy" "oac_read" {
 
 data "aws_vpc" "default" { default = true }
 data "aws_subnets" "default" {
-  filter { name = "vpc-id" ; values = [data.aws_vpc.default.id] }
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
 }
 
 resource "aws_security_group" "batch_instances" {
   name        = "${local.short}-batch-sg-${local.suffix}"
   description = "Egress-only for Batch EC2"
   vpc_id      = data.aws_vpc.default.id
-  egress { from_port = 0, to_port = 0, protocol = "-1", cidr_blocks = ["0.0.0.0/0"] }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 ########################
@@ -315,7 +374,7 @@ resource "aws_batch_job_definition" "job" {
     jobRoleArn  = aws_iam_role.job_role.arn
     environment = [
       { name = "APP_NAME",            value = var.app_name },
-      { name = "VERSION",             value = var.version },
+      { name = "VERSION",             value = var.app_version },
       { name = "USERNAME",            value = var.username },
       { name = "EMAIL",               value = var.email },
       { name = "BUCKET",              value = aws_s3_bucket.data.bucket },
@@ -411,7 +470,7 @@ output "s3_bucket_name" {
 
 output "cloudfront_domain" {
   value       = var.create_cloudfront ? aws_cloudfront_distribution.cdn[0].domain_name : ""
-  description = "If enabled, fetch https://<domain>/${local.latest_prefix}/results.json"
+  description = "If enabled, fetch https://<domain>/<latest_prefix>/results.json"
 }
 
 output "batch_job_queue_arn" {
