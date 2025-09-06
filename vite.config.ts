@@ -33,5 +33,8 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+    allowedHosts: [
+      "e7d26def-4cbc-4a2b-8739-2516c3da89d4-00-2ym1guw3gv1l2.worf.replit.dev",
+    ],
   },
 });
