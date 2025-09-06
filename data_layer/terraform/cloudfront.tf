@@ -14,7 +14,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 resource "aws_cloudfront_distribution" "cdn" {
   count               = var.create_cloudfront ? 1 : 0
   enabled             = true
-  default_root_object = ""
+  default_root_object = "index.html"
 
   origin {
     origin_id                = "s3-origin"
