@@ -8,7 +8,7 @@
 locals {
   # path to the dist to upload; assumed to be at repo root ./dist
   # from this module (data_layer/terraform) go up two levels to repo root then /dist
-  dist_dir = "${path.module}/../../dist"
+  dist_dir = "${path.module}/../../dist/public"
   # if dist_dir exists, gather files recursively; otherwise use empty list to avoid errors
   # `fileexists()` errors for directories, so use `can(fileset(...))` which succeeds
   # only when the directory exists and fileset can read it.

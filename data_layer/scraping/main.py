@@ -200,6 +200,43 @@ Examples:
     processed_count = 0
     total_games_processed = 0
     players_data = {}
+    # total players to process (used for progress / ETA)
+    total_players = len(player_usernames)
+    start_time_main = time.time()
+
+    def _format_duration(s: float) -> str:
+        """Format seconds as H:MM:SS"""
+        s = int(round(s))
+        hours = s // 3600
+        minutes = (s % 3600) // 60
+        seconds = s % 60
+        if hours:
+            return f"{hours}:{minutes:02d}:{seconds:02d}"
+        return f"{minutes}:{seconds:02d}"
+
+    def emit_progress_if_needed(processed: int) -> None:
+        """Emit progress logs every 10 players when verbose is enabled.
+
+        Logs: processed/total, progress %, elapsed time, and ETA (derived from
+        average time per processed player).
+        """
+        if not args.verbose or processed == 0:
+            return
+        if processed % 10 != 0:
+            return
+
+        elapsed = time.time() - start_time_main
+        avg_per_player = elapsed / processed if processed > 0 else 0.0
+        remaining = max(0, total_players - processed)
+        eta_seconds = remaining * avg_per_player
+
+        percent = (processed / total_players * 100) if total_players > 0 else 0.0
+
+        print(
+            f"[PROGRESS] Processed {processed}/{total_players} players "
+            f"({percent:.1f}%) – elapsed: {_format_duration(elapsed)} – "
+            f"ETA: {_format_duration(eta_seconds)}"
+        )
 
     for username in player_usernames:
         try:
@@ -223,6 +260,7 @@ Examples:
             games = fetch_games_in_window(username, start_time, end_time)
             if not games:
                 processed_count += 1
+                emit_progress_if_needed(processed_count)
                 continue
 
             # Count games processed
@@ -234,6 +272,7 @@ Examples:
             )
             all_streaks.extend(streaks)
             processed_count += 1
+            emit_progress_if_needed(processed_count)
 
             if args.verbose and (processed_count % 25 == 0):
                 print(f"[INFO] Processed {processed_count}/{len(player_usernames)} players; "
@@ -243,6 +282,7 @@ Examples:
         except Exception as e:
             print(f"[ERROR] Failed to process player {username}: {e}", file=sys.stderr)
             processed_count += 1
+            emit_progress_if_needed(processed_count)
             continue
 
     # Sort streaks: highest rating first, then rarest probability, then longest
