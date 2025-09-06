@@ -232,11 +232,11 @@ Examples:
 
         percent = (processed / total_players * 100) if total_players > 0 else 0.0
 
-        print(
-            f"[PROGRESS] Processed {processed}/{total_players} players "
-            f"({percent:.1f}%) – elapsed: {_format_duration(elapsed)} – "
-            f"ETA: {_format_duration(eta_seconds)}"
-        )
+        logs_string = f"""[PROGRESS] Processed {processed}/{total_players} players({percent:.1f}%)
+        - elapsed: {_format_duration(elapsed)}
+        - ETA: {_format_duration(eta_seconds)}"""
+
+        print(logs_string)
 
     for username in player_usernames:
         try:
@@ -275,9 +275,11 @@ Examples:
             emit_progress_if_needed(processed_count)
 
             if args.verbose and (processed_count % 25 == 0):
-                print(f"[INFO] Processed {processed_count}/{len(player_usernames)} players; "
-                      f"found {len(all_streaks)} interesting streaks so far; "
-                      f"processed {total_games_processed} games")
+                processed_string = f"""[INFO] Processed {processed_count}/{len(player_usernames)} players; 
+                found {len(all_streaks)} interesting streaks so far; 
+                processed {total_games_processed} games
+                """
+                print(processed_string)
 
         except Exception as e:
             print(f"[ERROR] Failed to process player {username}: {e}", file=sys.stderr)

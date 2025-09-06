@@ -131,7 +131,6 @@ class ChessComHttpClient:
                 continue
 
             # Final failure after all retries
-            print(f"[ERROR] HTTP {response.status_code} for {url} after {self.retries} attempts: "
-                  f"{response.text[:120]}", file=sys.stderr)
+            print(f"[ERROR] HTTP {response.status_code} for {url} after {self.retries} attempts: {response.text[:120]}", file=sys.stderr)
             time.sleep(self.sleep_s)
             return None

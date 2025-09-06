@@ -2,6 +2,11 @@
 # S3 bucket (private)
 ########################
 
+locals {
+  timestamp = "${timestamp()}"
+  timestamp_sanitized = "${replace("${local.timestamp}", "/[- TZ:]/", "")}"
+}
+
 resource "aws_s3_bucket" "data" {
   bucket = local.bucket_name
 }
@@ -45,7 +50,7 @@ resource "aws_s3_bucket_public_access_block" "code" {
 data "archive_file" "scraping_code" {
   type        = "zip"
   source_dir  = local.scraping_dir_path_effective
-  output_path = "${path.module}/scraping.zip"
+  output_path = "${path.module}/scraping-${local.timestamp_sanitized}.zip"
   excludes    = ["__pycache__", "*.pyc", "data", ".dockerignore"]
 }
 
