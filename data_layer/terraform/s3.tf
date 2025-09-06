@@ -25,6 +25,22 @@ resource "aws_s3_bucket_cors_configuration" "data" {
   }
 }
 
+########################
+# S3 bucket for code (scraping zip)
+########################
+
+resource "aws_s3_bucket" "code" {
+  bucket = local.code_bucket_name
+}
+
+resource "aws_s3_bucket_public_access_block" "code" {
+  bucket                  = aws_s3_bucket.code.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # Upload the Python scraping files for the Batch job to download
 data "archive_file" "scraping_code" {
   type        = "zip"
@@ -34,7 +50,8 @@ data "archive_file" "scraping_code" {
 }
 
 resource "aws_s3_object" "scraping_code" {
-  bucket = aws_s3_bucket.data.id
+  # Upload the zip to the dedicated code bucket
+  bucket = aws_s3_bucket.code.id
   key    = "${local.code_prefix}/scraping.zip"
   source = data.archive_file.scraping_code.output_path
   etag   = filemd5(data.archive_file.scraping_code.output_path)
