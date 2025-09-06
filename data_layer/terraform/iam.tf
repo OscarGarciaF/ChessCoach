@@ -54,7 +54,13 @@ resource "aws_iam_role_policy" "ecs_task_s3_policy" {
         Sid    = "ReadCode"
         Effect = "Allow"
         Action = ["s3:GetObject"]
-        Resource = "${aws_s3_bucket.data.arn}/${local.code_prefix}/*"
+        Resource = "${aws_s3_bucket.code.arn}/${local.code_prefix}/*"
+      },
+      {
+        Sid    = "ListBucketCode"
+        Effect = "Allow"
+        Action = ["s3:ListBucket"]
+        Resource = aws_s3_bucket.code.arn
       },
       {
         Sid    = "WriteOutputs"
@@ -63,7 +69,7 @@ resource "aws_iam_role_policy" "ecs_task_s3_policy" {
         Resource = "${aws_s3_bucket.data.arn}/${local.latest_prefix}/*"
       },
       {
-        Sid    = "ListBucket"
+        Sid    = "ListBucketData"
         Effect = "Allow"
         Action = ["s3:ListBucket"]
         Resource = aws_s3_bucket.data.arn
