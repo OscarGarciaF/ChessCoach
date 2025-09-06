@@ -56,6 +56,35 @@ resource "aws_s3_object" "dist_files" {
   )
 }
 
+########################
+# Force CloudFront invalidation when dist_files changes
+# We compute a hash of the list of files; when that hash changes the
+# null_resource will be recreated which we use as a trigger for the
+# CloudFront invalidation resource.
+locals {
+  dist_files_hash = md5(join(",", sort(local.dist_files)))
+}
+
+resource "null_resource" "dist_files_changed" {
+  count = var.create_cloudfront ? 1 : 0
+
+  triggers = {
+    dist_files_hash = local.dist_files_hash
+  }
+
+  # Run AWS CLI to create an invalidation when the hash changes. This
+  # avoids relying on a provider resource that may not exist in some
+  # provider versions. The command uses the distribution id and the hash
+  # as a caller-reference to ensure idempotency.
+  provisioner "local-exec" {
+    command = "aws cloudfront create-invalidation --distribution-id ${aws_cloudfront_distribution.cdn[0].id} --paths /*"
+  }
+
+  # Ensure the invalidation runs after upload changes. Referencing the
+  # for_each resource name makes this depend on all uploaded objects.
+  depends_on = [aws_s3_object.dist_files]
+}
+
 output "dist_upload_count" {
   value = length(local.dist_files)
   description = "Number of files in local dist directory that will be uploaded to S3 as individual objects."
