@@ -4,14 +4,18 @@ import StreaksTable from "@/components/streaks-table";
 import AnalyticsSection from "@/components/analytics-section";
 import AboutSection from "@/components/about-section";
 import Footer from "@/components/footer";
+import { dataService } from "@/lib/data-service";
+import { useMemo } from "react";
 
 export default function Home() {
+  const streaks = useMemo(() => dataService.getStreaksWithPlayer(), []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <HeroSection />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <StreaksTable />
+        <StreaksTable streaks={streaks} />
         <AnalyticsSection />
         <AboutSection />
       </main>

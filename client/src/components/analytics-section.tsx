@@ -1,23 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { dataService } from "@/lib/data-service";
 import { type AnalyticsData } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useMemo } from "react";
 
 export default function AnalyticsSection() {
-  const { data: analytics, isLoading, error } = useQuery<AnalyticsData>({
-    queryKey: ["/api/analytics"],
-  });
+  const analytics = useMemo(() => dataService.getAnalyticsData(), []);
 
-  if (error) {
-    return (
-      <section id="analytics" className="mb-12">
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
-          <p className="text-destructive">Failed to load analytics data. Please try again later.</p>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section id="analytics" className="mb-12">
@@ -32,17 +21,7 @@ export default function AnalyticsSection() {
             <CardTitle>Probability Tier Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-2 w-32" />
-                    <Skeleton className="h-4 w-8" />
-                  </div>
-                ))}
-              </div>
-            ) : analytics ? (
+            {analytics ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -103,19 +82,7 @@ export default function AnalyticsSection() {
             <CardTitle>Most Extreme Streaks</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-border">
-                    <div className="flex items-center space-x-3">
-                      <Skeleton className="w-6 h-6 rounded-full" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                    <Skeleton className="h-6 w-16" />
-                  </div>
-                ))}
-              </div>
-            ) : analytics?.topStreaks ? (
+            {analytics.topStreaks ? (
               <div className="space-y-3">
                 {analytics.topStreaks.map((streak) => (
                   <div
@@ -147,7 +114,7 @@ export default function AnalyticsSection() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary" data-testid="total-streaks">
-              {isLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : analytics?.totalStreaks}
+              {analytics.totalStreaks}
             </div>
             <div className="text-sm text-muted-foreground">Total Interesting Streaks</div>
           </CardContent>
@@ -155,7 +122,7 @@ export default function AnalyticsSection() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary" data-testid="average-length">
-              {isLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : analytics?.averageStreakLength}
+              {analytics.averageStreakLength}
             </div>
             <div className="text-sm text-muted-foreground">Average Streak Length</div>
           </CardContent>
@@ -163,7 +130,7 @@ export default function AnalyticsSection() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary" data-testid="extreme-streaks">
-              {isLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : analytics?.extremeCount}
+              {analytics.extremeCount}
             </div>
             <div className="text-sm text-muted-foreground">Extreme Probability (≤0.01%)</div>
           </CardContent>
@@ -171,7 +138,7 @@ export default function AnalyticsSection() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary" data-testid="highest-rating">
-              {isLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : analytics?.highestRating}
+              {analytics.highestRating}
             </div>
             <div className="text-sm text-muted-foreground">Highest Rating with Streak</div>
           </CardContent>

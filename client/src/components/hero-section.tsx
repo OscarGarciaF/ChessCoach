@@ -1,17 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-
-interface SummaryData {
-  window_days: number;
-  players_processed: number;
-  games_processed: number;
-  streaks_found: number;
-  generated_at: number;
-}
+import { dataService } from "@/lib/data-service";
+import { useMemo } from "react";
 
 export default function HeroSection() {
-  const { data: summary } = useQuery<SummaryData>({
-    queryKey: ["/api/summary"],
-  });
+  const summary = useMemo(() => dataService.getSummaryData(), []);
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
@@ -22,7 +13,7 @@ export default function HeroSection() {
     return num.toString();
   };
 
-  const lastUpdated = summary?.generated_at 
+  const lastUpdated = summary.generated_at 
     ? new Date(summary.generated_at * 1000).toLocaleDateString() 
     : new Date().toLocaleDateString();
 
@@ -38,10 +29,10 @@ export default function HeroSection() {
               <span className="font-semibold">Last Updated:</span> {lastUpdated}
             </div>
             <div className="bg-white/20 rounded-lg px-3 py-2" data-testid="hero-stat-players">
-              <span className="font-semibold">Players Analyzed:</span> {summary?.players_processed || 0} titled players
+              <span className="font-semibold">Players Analyzed:</span> {summary.players_processed || 0} titled players
             </div>
             <div className="bg-white/20 rounded-lg px-3 py-2" data-testid="hero-stat-games">
-              <span className="font-semibold">Games Processed:</span> {formatNumber(summary?.games_processed || 0)} games ({summary?.window_days || 30} days)
+              <span className="font-semibold">Games Processed:</span> {formatNumber(summary.games_processed || 0)} games ({summary.window_days || 30} days)
             </div>
           </div>
         </div>

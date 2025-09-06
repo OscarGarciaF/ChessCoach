@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { type StreakWithPlayer } from "@shared/schema";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Search, ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type SortField = "probability" | "rating" | "streakLength" | "player";
 type SortDirection = "asc" | "desc";
@@ -41,7 +39,11 @@ const getProbabilityTierLabel = (tier: string, probability: number) => {
   }
 };
 
-export default function StreaksTable() {
+interface StreaksTableProps {
+  streaks: StreakWithPlayer[];
+}
+
+export default function StreaksTable({ streaks }: StreaksTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("all");
   const [titleFilter, setTitleFilter] = useState<string>("all");
@@ -49,9 +51,6 @@ export default function StreaksTable() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  const { data: streaks, isLoading, error } = useQuery<StreakWithPlayer[]>({
-    queryKey: ["/api/streaks"],
-  });
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -104,15 +103,6 @@ export default function StreaksTable() {
       return sortDirection === "asc" ? comparison : -comparison;
     });
 
-  if (error) {
-    return (
-      <section id="streaks" className="mb-12">
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
-          <p className="text-destructive">Failed to load streaks data. Please try again later.</p>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section id="streaks" className="mb-12">
@@ -172,19 +162,6 @@ export default function StreaksTable() {
         </div>
         
         <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="p-6 space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              ))}
-            </div>
-          ) : (
             <table className="w-full chess-table">
               <thead className="bg-muted">
                 <tr>
@@ -356,10 +333,9 @@ export default function StreaksTable() {
                 )}
               </tbody>
             </table>
-          )}
         </div>
         
-        {filteredAndSortedStreaks && filteredAndSortedStreaks.length === 0 && !isLoading && (
+        {filteredAndSortedStreaks && filteredAndSortedStreaks.length === 0 && (
           <div className="px-6 py-8 text-center">
             <p className="text-muted-foreground">No interesting streaks found matching your criteria.</p>
           </div>
