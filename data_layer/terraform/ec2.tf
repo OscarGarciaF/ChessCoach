@@ -2,6 +2,11 @@
 # ECS Fargate: cluster, task definition, log group
 ########################
 
+locals {
+  # build the optional CLI arg for limiting players so the long jsonencode string stays readable
+  limit_players_arg = var.limit_players > 0 ? "--limit-players ${var.limit_players}" : ""
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "${local.short}-cluster"
   
@@ -44,7 +49,18 @@ resource "aws_ecs_task_definition" "chess_scraper" {
       
       command = [
         "bash", "-c",
-        "set -eu && apt-get update -y && apt-get install -y --no-install-recommends awscli ca-certificates curl unzip && rm -rf /var/lib/apt/lists/* && python -m pip install --no-cache-dir --upgrade pip && mkdir -p /app/scraping /app/out && aws s3 cp \"s3://$${BUCKET}/$${CODE_PREFIX}/scraping.zip\" /app/scraping.zip && cd /app && unzip /app/scraping.zip -d scraping/ && cd /app/scraping && python -m pip install --no-cache-dir -r requirements.txt && python main.py --days ${var.days_window} --out /app/out --titles \"${var.titles}\" ${var.limit_players > 0 ? "--limit-players ${var.limit_players}" : ""} --verbose"
+        join(" && ", [
+          "set -eu",
+          "apt-get update -y",
+          "apt-get install -y --no-install-recommends awscli ca-certificates curl unzip",
+          "rm -rf /var/lib/apt/lists/*",
+          "python -m pip install --no-cache-dir --upgrade pip",
+          "mkdir -p /app/scraping /app/out",
+          "aws s3 cp \"s3://$${BUCKET}/$${CODE_PREFIX}/scraping.zip\" /app/scraping.zip",
+          "cd /app && unzip /app/scraping.zip -d scraping/",
+          "cd /app/scraping && python -m pip install --no-cache-dir -r requirements.txt",
+          "python main.py --days ${var.days_window} --out /app/out --titles \"${var.titles}\" ${local.limit_players_arg} --verbose"
+        ])
       ]
       
       logConfiguration = {
