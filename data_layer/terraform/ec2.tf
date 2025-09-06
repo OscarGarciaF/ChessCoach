@@ -43,17 +43,8 @@ resource "aws_ecs_task_definition" "chess_scraper" {
       ]
       
       command = [
-        "bash", "-c", <<-EOC
-          set -eu
-          apt-get update -y && apt-get install -y --no-install-recommends awscli ca-certificates curl unzip && rm -rf /var/lib/apt/lists/*
-          python -m pip install --no-cache-dir --upgrade pip
-          python -m pip install --no-cache-dir requests python-dateutil chess.com boto3
-          mkdir -p /app/scraping /app/out
-          aws s3 cp "s3://$${BUCKET}/$${CODE_PREFIX}/scraping.zip" /app/scraping.zip
-          cd /app && unzip scraping.zip -d scraping/
-          cd /app/scraping
-          python main.py --days ${var.days_window} --out /app/out --titles "${var.titles}" ${var.limit_players > 0 ? "--limit-players ${var.limit_players}" : ""} --verbose
-        EOC
+        "bash", "-c",
+        "set -eu && apt-get update -y && apt-get install -y --no-install-recommends awscli ca-certificates curl unzip && rm -rf /var/lib/apt/lists/* && python -m pip install --no-cache-dir --upgrade pip && mkdir -p /app/scraping /app/out && aws s3 cp \"s3://$${BUCKET}/$${CODE_PREFIX}/scraping.zip\" /app/scraping.zip && cd /app && unzip /app/scraping.zip -d scraping/ && cd /app/scraping && python -m pip install --no-cache-dir -r requirements.txt && python main.py --days ${var.days_window} --out /app/out --titles \"${var.titles}\" ${var.limit_players > 0 ? "--limit-players ${var.limit_players}" : ""} --verbose"
       ]
       
       logConfiguration = {
