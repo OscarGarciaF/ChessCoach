@@ -1,17 +1,17 @@
 export default function AboutSection() {
   return (
-    <section id="about" className="mb-12">
+    <section id="about" className="mb-0">
       <div className="bg-card rounded-lg shadow-sm border border-border p-6">
         <h2 className="text-xl font-semibold text-foreground mb-4" data-testid="about-title">
           About Interesting Chess
         </h2>
         <div className="prose prose-sm text-muted-foreground max-w-none">
-          <p className="mb-4">
+          <p className="mb-0">
             Interesting Chess automatically analyzes win streaks by titled chess players using Chess.com's public API. 
             We calculate the probability of each streak using Glicko rating system formulas, identifying statistically 
             unlikely performances.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-0">
             <div>
               <h3 className="font-medium text-foreground mb-2">Data Sources</h3>
               <ul className="text-sm space-y-1">
