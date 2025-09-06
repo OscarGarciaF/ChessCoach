@@ -43,8 +43,8 @@ resource "aws_ecs_task_definition" "chess_scraper" {
       ]
       
       command = [
-        "bash", "-lc", <<-EOC
-          set -euo pipefail
+        "bash", "-c", <<-EOC
+          set -eu
           apt-get update -y && apt-get install -y --no-install-recommends awscli ca-certificates curl unzip && rm -rf /var/lib/apt/lists/*
           python -m pip install --no-cache-dir --upgrade pip
           python -m pip install --no-cache-dir requests python-dateutil chess.com boto3
