@@ -5,6 +5,7 @@ This module analyzes chess games to identify consecutive win streaks and calcula
 their statistical significance based on rating-based win probabilities.
 """
 
+import logging
 import sys
 from typing import Dict, List, Optional, Tuple
 
@@ -16,6 +17,7 @@ from probability import (
     expected_win_prob_glicko
 )
 
+logger = logging.getLogger(__name__)
 
 def analyze_game_from_perspective(
     username: str, 
@@ -213,12 +215,11 @@ def analyze_player_streaks(
         return []
 
     if verbose:
-        print(f"[INFO] Analyzing {len(games)} games for {player.username}", file=sys.stderr)
+        logger.info("Analyzing %d games for %s", len(games), player.username)
 
     streaks = detect_win_streaks(player, games, stats_cache, thresholds, verbose)
 
     if verbose and streaks:
-        print(f"[INFO] Found {len(streaks)} interesting streaks for {player.username}", 
-              file=sys.stderr)
+        logger.info("Found %d interesting streaks for %s", len(streaks), player.username)
 
     return streaks

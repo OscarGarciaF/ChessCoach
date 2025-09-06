@@ -8,6 +8,7 @@ This module provides a polite HTTP client that respects Chess.com's API guidelin
 - Retry logic for transient failures
 """
 
+import logging
 import sys
 import time
 from typing import Optional
@@ -15,6 +16,8 @@ from typing import Optional
 import requests
 
 from config import DEFAULT_SLEEP, DEFAULT_TIMEOUT, DEFAULT_RETRIES
+
+logger = logging.getLogger(__name__)
 
 
 class ChessComHttpClient:
@@ -84,12 +87,10 @@ class ChessComHttpClient:
             except requests.RequestException as e:
                 if attempt <= self.retries:
                     wait_time = min(5 * attempt, 20)
-                    print(f"[WARN] Request exception for {url}: {e}. Retrying in {wait_time}s...", 
-                          file=sys.stderr)
+                    logger.warning("Request exception for %s: %s. Retrying in %ss...", url, e, wait_time, exc_info=True)
                     time.sleep(wait_time)
                     continue
-                print(f"[ERROR] GET failed after {self.retries} attempts for {url}: {e}", 
-                      file=sys.stderr)
+                logger.error("GET failed after %d attempts for %s: %s", self.retries, url, e, exc_info=True)
                 return None
 
             # Handle successful response
@@ -97,7 +98,7 @@ class ChessComHttpClient:
                 try:
                     data = response.json()
                 except ValueError as e:
-                    print(f"[WARN] Invalid JSON response from {url}: {e}", file=sys.stderr)
+                    logger.warning("Invalid JSON response from %s: %s", url, e, exc_info=True)
                     data = None
                 
                 # Always sleep to maintain serial access
@@ -112,8 +113,7 @@ class ChessComHttpClient:
             # Handle rate limiting with exponential backoff
             if response.status_code == 429:
                 wait_time = min(10 * attempt, 60)
-                print(f"[INFO] Rate limited (429) for {url}. Backing off {wait_time}s...", 
-                      file=sys.stderr)
+                logger.info("Rate limited (429) for %s. Backing off %ss...", url, wait_time)
                 time.sleep(wait_time)
                 continue
 
@@ -125,12 +125,17 @@ class ChessComHttpClient:
             # Handle other errors with retry
             if attempt <= self.retries:
                 wait_time = min(5 * attempt, 20)
-                print(f"[INFO] HTTP {response.status_code} for {url}. Retrying in {wait_time}s...", 
-                      file=sys.stderr)
+                logger.info("HTTP %d for %s. Retrying in %ss...", response.status_code, url, wait_time)
                 time.sleep(wait_time)
                 continue
 
             # Final failure after all retries
-            print(f"[ERROR] HTTP {response.status_code} for {url} after {self.retries} attempts: {response.text[:120]}", file=sys.stderr)
+            logger.error(
+                "HTTP %d for %s after %d attempts: %s",
+                response.status_code,
+                url,
+                self.retries,
+                response.text[:120],
+            )
             time.sleep(self.sleep_s)
             return None

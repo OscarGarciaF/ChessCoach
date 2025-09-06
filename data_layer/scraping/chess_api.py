@@ -10,10 +10,13 @@ Uses the official chess.com Python module for reliable API interactions.
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 
+import logging
 import chessdotcom
 from chessdotcom import Client
 
 from models import PlayerInfo
+
+logger = logging.getLogger(__name__)
 
 
 def setup_chess_client(user_agent: str) -> None:
@@ -72,13 +75,13 @@ def fetch_titled_players(
             response = chessdotcom.get_titled_players(title)
             if not response or not hasattr(response, 'json'):
                 if verbose:
-                    print(f"[WARN] No response for title {title}")
+                    logger.warning("No response for title %s", title)
                 continue
                 
             data = response.json
             if not data or "players" not in data:
                 if verbose:
-                    print(f"[WARN] No players found for title {title}")
+                    logger.warning("No players found for title %s", title)
                 continue
                 
             for username in data["players"]:
@@ -91,7 +94,7 @@ def fetch_titled_players(
                     players[username_lower] = title
         except Exception as e:
             if verbose:
-                print(f"[WARN] Error fetching title {title}: {e}")
+                logger.warning("Error fetching title %s: %s", title, e, exc_info=True)
             continue
     
     return players

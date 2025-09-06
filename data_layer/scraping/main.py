@@ -24,6 +24,7 @@ For more options, run: python main.py --help
 
 import argparse
 import json
+import logging
 import os
 import sys
 import time
@@ -42,6 +43,8 @@ from chess_api import (
 from config import THRESHOLDS, TITLE_ABBREVS
 from streak_analyzer import analyze_player_streaks
 import boto3
+
+logger = logging.getLogger(__name__)
 
 def _upload_results_to_s3(local_path: str, s3_location: str, verbose: bool = True) -> None:
     """
@@ -63,12 +66,12 @@ def _upload_results_to_s3(local_path: str, s3_location: str, verbose: bool = Tru
 
         s3 = boto3.client("s3")
         if verbose:
-            print(f"[INFO] Uploading {local_path} to s3://{bucket}/{key}")
+            logger.info("Uploading %s to s3://%s/%s", local_path, bucket, key)
         s3.upload_file(local_path, bucket, key)
         if verbose:
-            print(f"[DONE] Uploaded to s3://{bucket}/{key}")
+            logger.info("Uploaded to s3://%s/%s", bucket, key)
     except Exception as e:  # broaden to catch import and boto errors
-        print(f"[WARN] Skipped S3 upload due to error: {e}", file=sys.stderr)
+        logger.warning("Skipped S3 upload due to error: %s", e, exc_info=True)
 
 def setup_user_agent() -> str:
     """
@@ -167,6 +170,12 @@ Examples:
     
     args = parser.parse_args()
 
+    # Configure logging early using verbose flag
+    logging.basicConfig(
+        level=logging.INFO if args.verbose else logging.WARNING,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
     # Setup output directory
     os.makedirs(args.out, exist_ok=True)
 
@@ -180,7 +189,7 @@ Examples:
         from datetime import datetime, timezone
         start_dt = datetime.fromtimestamp(start_time, tz=timezone.utc)
         end_dt = datetime.fromtimestamp(end_time, tz=timezone.utc)
-        print(f"[INFO] Time window: {start_dt} -> {end_dt}")
+        logger.info("Time window: %s -> %s", start_dt, end_dt)
 
     # Fetch titled players
     title_list = [title.strip().upper() for title in args.titles.split(",") if title.strip()]
@@ -192,7 +201,7 @@ Examples:
             player_usernames = player_usernames[:args.limit_players]
 
     if args.verbose:
-        print(f"[INFO] Processing {len(player_usernames)} players")
+        logger.info("Processing %d players", len(player_usernames))
 
     # Process each player
     all_streaks = []
@@ -232,11 +241,13 @@ Examples:
 
         percent = (processed / total_players * 100) if total_players > 0 else 0.0
 
-        logs_string = f"""[PROGRESS] Processed {processed}/{total_players} players({percent:.1f}%)
-        - elapsed: {_format_duration(elapsed)}
-        - ETA: {_format_duration(eta_seconds)}"""
+        logs_string = (
+            f"[PROGRESS] Processed {processed}/{total_players} players({percent:.1f}%)\n"
+            f"- elapsed: {_format_duration(elapsed)}\n"
+            f"- ETA: {_format_duration(eta_seconds)}"
+        )
 
-        print(logs_string)
+        logger.info(logs_string)
 
     for username in player_usernames:
         try:
@@ -275,14 +286,15 @@ Examples:
             emit_progress_if_needed(processed_count)
 
             if args.verbose and (processed_count % 25 == 0):
-                processed_string = f"""[PROGRESS] Processed {processed_count}/{len(player_usernames)} players; 
-                found {len(all_streaks)} interesting streaks so far; 
-                processed {total_games_processed} games
-                """
-                print(processed_string)
+                processed_string = (
+                    f"[PROGRESS] Processed {processed_count}/{len(player_usernames)} players; "
+                    f"found {len(all_streaks)} interesting streaks so far; "
+                    f"processed {total_games_processed} games"
+                )
+                logger.info(processed_string)
 
         except Exception as e:
-            print(f"[ERROR] Failed to process player {username}: {e}", file=sys.stderr)
+            logger.exception("Failed to process player %s: %s", username, e)
             processed_count += 1
             emit_progress_if_needed(processed_count)
             continue
@@ -327,13 +339,13 @@ Examples:
         _upload_results_to_s3(results_file, s3_location, verbose=args.verbose)
     else:
         if args.verbose:
-            print("[INFO] S3_LOCATION not set; skipping S3 upload")
+            logger.info("S3_LOCATION not set; skipping S3 upload")
 
     # Print results
-    print(f"[DONE] Processed {processed_count} players")
-    print(f"[DONE] Processed {total_games_processed} games")
-    print(f"[DONE] Found {len(all_streaks)} interesting streaks")
-    print(f"[DONE] Results written to: {results_file}")
+    logger.info("Processed %d players", processed_count)
+    logger.info("Processed %d games", total_games_processed)
+    logger.info("Found %d interesting streaks", len(all_streaks))
+    logger.info("Results written to: %s", results_file)
 
 
 if __name__ == "__main__":
