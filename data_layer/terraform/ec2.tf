@@ -60,7 +60,7 @@ resource "aws_ecs_task_definition" "chess_scraper" {
           "aws s3 cp \"s3://$${CODE_BUCKET}/$${CODE_PREFIX}/scraping.zip\" /app/scraping.zip",
           "cd /app && unzip /app/scraping.zip -d scraping/",
           "cd /app/scraping && python -m pip install --no-cache-dir -r requirements.txt",
-          "python main.py --days ${var.days_window} --out /app/out --titles \"${var.titles}\" ${local.limit_players_arg} --verbose"
+          "python main.py"
         ])
       ]
       
