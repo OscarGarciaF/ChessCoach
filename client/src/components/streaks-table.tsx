@@ -236,7 +236,7 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <img
-                          src={streak.player.avatarUrl || "/placeholder-avatar.svg"}
+                          src={streak.player.avatarUrl || "https://www.chess.com/bundles/web/images/user-image.007dad08.svg"}
                           alt={`${streak.player.username} avatar`}
                           className="w-8 h-8 rounded-full mr-3"
                           data-testid={`avatar-${streak.player.username}`}
