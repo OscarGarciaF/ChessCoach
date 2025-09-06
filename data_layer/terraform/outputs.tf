@@ -11,27 +11,15 @@ output "cloudfront_domain" {
   description = "If enabled, fetch https://<domain>/<latest_prefix>/results.json"
 }
 
-output "batch_job_queue_arn" {
-  value = aws_batch_job_queue.queue.arn
+output "ecs_cluster_name" {
+  value = aws_ecs_cluster.main.name
 }
 
-output "batch_job_definition_arn" {
-  value = aws_batch_job_definition.job.arn
-}
-
-output "aws_access_key_id" {
-  value     = aws_iam_access_key.batch_user_key.id
-  sensitive = false
-  description = "AWS Access Key ID for boto3 authentication"
-}
-
-output "aws_secret_access_key" {
-  value     = aws_iam_access_key.batch_user_key.secret
-  sensitive = true
-  description = "AWS Secret Access Key for boto3 authentication"
+output "ecs_task_definition_arn" {
+  value = aws_ecs_task_definition.chess_scraper.arn
 }
 
 output "aws_region" {
   value = var.aws_region
-  description = "AWS region for boto3 configuration"
+  description = "AWS region for ECS and S3 configuration"
 }

@@ -15,3 +15,5 @@ data_layer/scraping/data/**
 **/.terraform**
 scraping.zip
 terraform.plan
+**.tfstate
+**.tfstate.backup
