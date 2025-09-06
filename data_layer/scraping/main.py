@@ -275,7 +275,7 @@ Examples:
             emit_progress_if_needed(processed_count)
 
             if args.verbose and (processed_count % 25 == 0):
-                processed_string = f"""[INFO] Processed {processed_count}/{len(player_usernames)} players; 
+                processed_string = f"""[PROGRESS] Processed {processed_count}/{len(player_usernames)} players; 
                 found {len(all_streaks)} interesting streaks so far; 
                 processed {total_games_processed} games
                 """
