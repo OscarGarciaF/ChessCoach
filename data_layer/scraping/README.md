@@ -261,66 +261,6 @@ When RD is unavailable:
 - Uses log-space arithmetic to prevent numerical underflow
 - Classifies streaks into rarity thresholds
 
-## AWS Batch Deployment
-
-### Building for AWS
-
-1. **Build and tag the image:**
-   ```bash
-   docker build -t your-registry/interesting-chess-scraper:latest .
-   ```
-
-2. **Push to ECR (or your registry):**
-   ```bash
-   aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin your-account.dkr.ecr.us-east-1.amazonaws.com
-   docker tag interesting-chess-scraper:latest your-account.dkr.ecr.us-east-1.amazonaws.com/interesting-chess-scraper:latest
-   docker push your-account.dkr.ecr.us-east-1.amazonaws.com/interesting-chess-scraper:latest
-   ```
-
-### Job Definition Example
-
-```json
-{
-  "jobDefinitionName": "interesting-chess-scraper",
-  "type": "container",
-  "containerProperties": {
-    "image": "your-account.dkr.ecr.us-east-1.amazonaws.com/interesting-chess-scraper:latest",
-    "vcpus": 1,
-    "memory": 2048,
-    "jobRoleArn": "arn:aws:iam::account:role/BatchJobRole",
-    "environment": [
-      {"name": "APP_NAME", "value": "interesting-chess"},
-      {"name": "VERSION", "value": "1.0"},
-      {"name": "USERNAME", "value": "production"},
-      {"name": "EMAIL", "value": "admin@yoursite.com"}
-    ],
-    "mountPoints": [
-      {
-        "sourceVolume": "output",
-        "containerPath": "/app/data",
-        "readOnly": false
-      }
-    ],
-    "volumes": [
-      {
-        "name": "output",
-        "host": {"sourcePath": "/tmp/chess-data"}
-      }
-    ]
-  }
-}
-```
-
-### Submitting Jobs
-
-```bash
-aws batch submit-job \
-  --job-name "chess-scraper-$(date +%Y%m%d)" \
-  --job-queue "your-job-queue" \
-  --job-definition "interesting-chess-scraper" \
-  --parameters "days=30,titles=GM,IM,FM"
-```
-
 ## API Guidelines Compliance
 
 This application strictly follows Chess.com's Public API guidelines by using the official `chess.com` Python module:
@@ -357,11 +297,6 @@ setup_chess_client('TestApp/1.0 (contact: test@example.com)')
 players = fetch_titled_players(['GM'], verbose=False)
 print(f'Found {len(players)} GM players')
 "
-
-# Validate Docker build
-docker build -t test-scraper .
-docker run test-scraper --help
-```
 
 ### Adding New Features
 
