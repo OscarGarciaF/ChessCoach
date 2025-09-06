@@ -187,8 +187,9 @@ Examples:
     titled_players = fetch_titled_players(title_list, verbose=args.verbose)
     player_usernames = sorted(titled_players.keys())
     
-    if args.limit_players is not None:
-        player_usernames = player_usernames[:args.limit_players]
+    if args.limit_players is not None and type(args.limit_players) is int:
+        if args.limit_players > 0:
+            player_usernames = player_usernames[:args.limit_players]
 
     if args.verbose:
         print(f"[INFO] Processing {len(player_usernames)} players")
