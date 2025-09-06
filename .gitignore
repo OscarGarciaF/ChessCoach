@@ -18,3 +18,4 @@ terraform.plan
 **.tfstate
 **.tfstate.backup
 **.zip
+attached_assets/**

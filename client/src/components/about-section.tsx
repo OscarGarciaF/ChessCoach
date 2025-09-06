@@ -9,11 +9,7 @@ export default function AboutSection() {
           <p className="mb-4">
             Interesting Chess automatically analyzes win streaks by titled chess players using Chess.com's public API. 
             We calculate the probability of each streak using Glicko rating system formulas, identifying statistically 
-            anomalous performances that merit attention.
-          </p>
-          <p className="mb-4">
-            The term "interesting" in chess can be a euphemism for potentially suspicious play. This tool provides 
-            objective statistical analysis without making accusations - interpretation is left to the user.
+            unlikely performances.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div>

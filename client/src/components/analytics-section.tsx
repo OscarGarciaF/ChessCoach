@@ -92,7 +92,7 @@ export default function AnalyticsSection() {
                   >
                     <div className="flex items-center space-x-3">
                       <img
-                        src={streak.player.avatarUrl || "/placeholder-avatar.svg"}
+                        src={streak.player.avatarUrl || "https://www.chess.com/bundles/web/images/user-image.007dad08.svg"}
                         alt={streak.player.username}
                         className="w-6 h-6 rounded-full"
                       />
