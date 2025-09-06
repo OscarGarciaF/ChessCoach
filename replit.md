@@ -11,39 +11,40 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend Architecture
-The client is built as a React SPA using TypeScript and modern React patterns:
+The application is built as a static React SPA using TypeScript:
 - **Framework**: React 18 with TypeScript for type safety
 - **Build Tool**: Vite for fast development and optimized production builds
 - **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack Query for server state management and caching
+- **State Management**: Direct data imports and React state (no external state management)
 - **UI Framework**: Radix UI components with shadcn/ui styling system
 - **Styling**: Tailwind CSS with CSS variables for theming, designed to emulate Chess.com's visual style
+- **Data Processing**: Client-side data service that processes JSON data locally
 
-### Backend Architecture
-The server follows a simple Express.js REST API pattern:
-- **Runtime**: Node.js with TypeScript (ESM modules)
-- **Framework**: Express.js for HTTP server and routing
-- **Development**: tsx for TypeScript execution in development
-- **Production**: esbuild for compilation to optimized JavaScript bundles
-- **Storage**: In-memory storage implementation with interface for future database integration
+### Static Architecture
+The application is fully static with no backend dependencies:
+- **Data Source**: Static JSON file imported directly into the application
+- **Processing**: All data transformation and analysis happens in the browser
+- **Deployment**: Can be hosted on any static hosting service (GitHub Pages, Netlify, Vercel, etc.)
+- **Performance**: Faster loading with no API round trips, everything cached by CDN
 
 ### Data Model
-The application uses a three-entity schema optimized for chess streak analysis:
-- **Players**: Stores titled player information (username, title, rating, profile data)
-- **Win Streaks**: Records streak metadata (length, probability, tier classification, date range)
+The application processes static JSON data with three main data structures:
+- **Players**: Titled player information (username, title, rating, profile data)
+- **Win Streaks**: Streak metadata (length, probability, tier classification, date range)
 - **Games**: Individual game records within streaks (opponent data, win probability, game URLs)
 
-### API Design
-RESTful endpoints provide access to streak data:
-- `GET /api/streaks` - Returns all interesting streaks with player data
-- `GET /api/streaks/:id` - Returns detailed streak information including games
-- `GET /api/analytics` - Returns aggregated analytics and distribution data
+### Data Service
+Client-side data processing service that:
+- Imports and parses the static `results.json` file
+- Transforms raw data into normalized application schemas
+- Provides methods matching the original API interface for easy component integration
+- Handles all probability calculations and data analysis in the browser
 
 ### Development Workflow
-- **Database**: Drizzle ORM configured for PostgreSQL with migration support
-- **Development Server**: Vite middleware integration for hot module replacement
-- **Type Safety**: Shared schema definitions between client and server using Zod validation
+- **Development Server**: Vite development server with hot module replacement
+- **Type Safety**: Shared schema definitions using Zod validation
 - **Path Aliases**: Configured for clean imports (`@/` for client, `@shared/` for shared code)
+- **Build Process**: `vite build` generates optimized static files ready for deployment
 
 ### Probability Calculation System
 The application implements Glicko rating system formulas to calculate win probabilities:
@@ -52,7 +53,9 @@ The application implements Glicko rating system formulas to calculate win probab
 - Tier classification system (extreme, high, moderate, low) based on probability thresholds
 
 ### Deployment Strategy
-The architecture supports static deployment with CDN caching:
-- Client builds to static assets for CDN distribution
-- Server compiles to single JavaScript bundle for serverless deployment
-- Environment-based configuration for development vs production
+Fully static deployment optimized for performance:
+- Single `vite build` command generates all static assets
+- No server or database dependencies
+- Can be deployed to any static hosting service
+- Optimal caching and CDN distribution
+- Perfect for GitHub Pages, Netlify, Vercel, or any CDN
