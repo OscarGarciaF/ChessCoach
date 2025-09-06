@@ -40,6 +40,7 @@ resource "aws_ecs_task_definition" "chess_scraper" {
         { name = "USERNAME", value = var.username },
         { name = "EMAIL", value = var.email },
         { name = "BUCKET", value = aws_s3_bucket.data.bucket },
+        { name = "CODE_BUCKET", value = aws_s3_bucket.code.bucket },
         { name = "PREFIX", value = local.latest_prefix },
         { name = "CODE_PREFIX", value = local.code_prefix },
         { name = "S3_LOCATION", value = "s3://${aws_s3_bucket.data.bucket}/${local.latest_prefix}/" },
