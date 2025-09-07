@@ -310,7 +310,23 @@ Examples:
     output_streaks = [serialize_streak_for_output(streak) for streak in all_streaks]
     
     # Additional sort for output to ensure consistent ordering by player_max_rating first
-    output_streaks.sort(key=lambda streak: (-streak["player_max_rating"], streak["streak"]["prob"]))
+    # Use a safe key that handles None values for player_max_rating and streak.prob
+    def _output_sort_key(streak):
+        # Keep behavior consistent with streak_sort_key above: treat missing rating as -1
+        rating = streak.get("player_max_rating")
+        if rating is None:
+            rating = -1
+
+        # For probability, smaller is rarer — missing probability should sort last
+        prob = None
+        if isinstance(streak.get("streak"), dict):
+            prob = streak["streak"].get("prob")
+        if prob is None:
+            prob = 10 # larger than any realistic probability (0 < p <= 1)
+
+        return (-rating, prob)
+
+    output_streaks.sort(key=_output_sort_key)
     
     # Create summary with games count
     summary = {
