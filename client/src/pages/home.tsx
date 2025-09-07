@@ -4,7 +4,6 @@ import StreaksTable from "@/components/streaks-table";
 import AnalyticsSection from "@/components/analytics-section";
 import AboutSection from "@/components/about-section";
 import Footer from "@/components/footer";
-import TierToggle from "@/components/tier-toggle";
 import { dataService } from "@/lib/data-service";
 import { useState, useEffect } from "react";
 import { type StreakWithPlayer } from "@shared/schema";
@@ -13,9 +12,6 @@ export default function Home() {
   const [streaks, setStreaks] = useState<StreakWithPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [enabledTiers, setEnabledTiers] = useState<Set<string>>(
-    new Set(["extreme", "high", "moderate"]) // Low tier disabled by default
-  );
 
   useEffect(() => {
     const loadData = async () => {
@@ -64,8 +60,7 @@ export default function Home() {
       <Header />
       <HeroSection />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <TierToggle onTierToggle={setEnabledTiers} />
-        <StreaksTable streaks={streaks} enabledTiers={enabledTiers} />
+        <StreaksTable streaks={streaks} />
         <AnalyticsSection />
         <AboutSection />
       </main>

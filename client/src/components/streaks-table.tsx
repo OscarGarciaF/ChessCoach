@@ -41,16 +41,34 @@ const getProbabilityTierLabel = (tier: string, probability: number) => {
 
 interface StreaksTableProps {
   streaks: StreakWithPlayer[];
-  enabledTiers: Set<string>;
 }
 
-export default function StreaksTable({ streaks, enabledTiers }: StreaksTableProps) {
+export default function StreaksTable({ streaks }: StreaksTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  // Remove tier filter state since it's now handled by parent component
   const [titleFilter, setTitleFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("probability");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [enabledTiers, setEnabledTiers] = useState<Set<string>>(
+    new Set(["extreme", "high", "moderate"]) // Low tier disabled by default
+  );
+
+  const toggleTier = (tier: string) => {
+    const newEnabledTiers = new Set(enabledTiers);
+    if (newEnabledTiers.has(tier)) {
+      newEnabledTiers.delete(tier);
+    } else {
+      newEnabledTiers.add(tier);
+    }
+    setEnabledTiers(newEnabledTiers);
+  };
+
+  const tiers = [
+    { id: "extreme", label: "🔴 Extreme", color: "tier-extreme" },
+    { id: "high", label: "🟠 High", color: "tier-high" },
+    { id: "moderate", label: "🟡 Moderate", color: "tier-moderate" },
+    { id: "low", label: "🟢 Low", color: "tier-low" },
+  ];
 
 
   const handleSort = (field: SortField) => {
@@ -109,7 +127,7 @@ export default function StreaksTable({ streaks, enabledTiers }: StreaksTableProp
     <section id="streaks" className="mb-12">
       {/* Search and Filters */}
       <div className="mb-6">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -123,7 +141,22 @@ export default function StreaksTable({ streaks, enabledTiers }: StreaksTableProp
               />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Tier Toggle Buttons */}
+            <div className="flex gap-1 mr-2">
+              {tiers.map((tier) => (
+                <Button
+                  key={tier.id}
+                  variant={enabledTiers.has(tier.id) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleTier(tier.id)}
+                  className={`text-xs px-2 py-1 h-7 ${tier.color} ${enabledTiers.has(tier.id) ? "opacity-100" : "opacity-50"}`}
+                  data-testid={`tier-toggle-${tier.id}`}
+                >
+                  {tier.label}
+                </Button>
+              ))}
+            </div>
             <Select value={titleFilter} onValueChange={setTitleFilter}>
               <SelectTrigger className="w-40" data-testid="filter-title">
                 <SelectValue placeholder="All Titles" />
@@ -147,7 +180,9 @@ export default function StreaksTable({ streaks, enabledTiers }: StreaksTableProp
           <h2 className="text-xl font-semibold text-foreground" data-testid="table-title">
             Interesting Win Streaks (Last 30 Days)
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Click rows to expand game details</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Click rows to expand game details • Showing {enabledTiers.size} of 4 probability tiers
+          </p>
         </div>
         
         <div className="overflow-x-auto">
