@@ -41,11 +41,12 @@ const getProbabilityTierLabel = (tier: string, probability: number) => {
 
 interface StreaksTableProps {
   streaks: StreakWithPlayer[];
+  enabledTiers: Set<string>;
 }
 
-export default function StreaksTable({ streaks }: StreaksTableProps) {
+export default function StreaksTable({ streaks, enabledTiers }: StreaksTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [tierFilter, setTierFilter] = useState<string>("all");
+  // Remove tier filter state since it's now handled by parent component
   const [titleFilter, setTitleFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("probability");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -77,7 +78,7 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
         streak.player.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         streak.player.title.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesTier = tierFilter === "all" || streak.probabilityTier === tierFilter;
+      const matchesTier = enabledTiers.has(streak.probabilityTier);
       const matchesTitle = titleFilter === "all" || streak.player.title === titleFilter;
       
       return matchesSearch && matchesTier && matchesTitle;
@@ -123,18 +124,6 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Select value={tierFilter} onValueChange={setTierFilter}>
-              <SelectTrigger className="w-48" data-testid="filter-tier">
-                <SelectValue placeholder="All Probability Tiers" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Probability Tiers</SelectItem>
-                <SelectItem value="extreme">≤0.01% (Extreme)</SelectItem>
-                <SelectItem value="high">≤0.1% (High)</SelectItem>
-                <SelectItem value="moderate">≤1% (Moderate)</SelectItem>
-                <SelectItem value="low">≤5% (Low)</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={titleFilter} onValueChange={setTitleFilter}>
               <SelectTrigger className="w-40" data-testid="filter-title">
                 <SelectValue placeholder="All Titles" />
@@ -153,7 +142,7 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
       </div>
 
       {/* Streaks Table */}
-      <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+      <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden max-h-[600px] overflow-y-auto">
         <div className="px-6 py-4 border-b border-border">
           <h2 className="text-xl font-semibold text-foreground" data-testid="table-title">
             Interesting Win Streaks (Last 30 Days)

@@ -122,9 +122,9 @@ export default function AnalyticsSection() {
               </div>
             ) : analytics?.topStreaks ? (
               <div className="space-y-3">
-                {analytics.topStreaks.map((streak) => (
+                {analytics.topStreaks.map((streak, index) => (
                   <div
-                    key={streak.id}
+                    key={`top-${streak.id}-${index}`}
                     className="flex items-center justify-between py-2 border-b border-border"
                     data-testid={`top-streak-${streak.id}`}
                   >
