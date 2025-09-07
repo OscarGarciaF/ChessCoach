@@ -2,10 +2,26 @@ import { dataService } from "@/lib/data-service";
 import { type AnalyticsData } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect } from "react";
 
 export default function AnalyticsSection() {
-  const analytics = useMemo(() => dataService.getAnalyticsData(), []);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      try {
+        const analyticsData = await dataService.getAnalyticsData();
+        setAnalytics(analyticsData);
+      } catch (error) {
+        console.error('Failed to load analytics:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadAnalytics();
+  }, []);
 
 
   return (
@@ -21,7 +37,17 @@ export default function AnalyticsSection() {
             <CardTitle>Probability Tier Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            {analytics ? (
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-2 w-32" />
+                    <Skeleton className="h-4 w-8" />
+                  </div>
+                ))}
+              </div>
+            ) : analytics ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -29,9 +55,9 @@ export default function AnalyticsSection() {
                     <span className="text-sm">≤0.01% (Extreme)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={(analytics.probabilityDistribution.extreme / analytics.totalStreaks) * 100} className="w-32" />
+                    <Progress value={analytics ? (analytics.probabilityDistribution.extreme / analytics.totalStreaks) * 100 : 0} className="w-32" />
                     <span className="text-sm font-medium text-foreground" data-testid="extreme-count">
-                      {analytics.probabilityDistribution.extreme}
+                      {analytics?.probabilityDistribution.extreme || 0}
                     </span>
                   </div>
                 </div>
@@ -41,9 +67,9 @@ export default function AnalyticsSection() {
                     <span className="text-sm">≤0.1% (High)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={(analytics.probabilityDistribution.high / analytics.totalStreaks) * 100} className="w-32" />
+                    <Progress value={analytics ? (analytics.probabilityDistribution.high / analytics.totalStreaks) * 100 : 0} className="w-32" />
                     <span className="text-sm font-medium text-foreground" data-testid="high-count">
-                      {analytics.probabilityDistribution.high}
+                      {analytics?.probabilityDistribution.high || 0}
                     </span>
                   </div>
                 </div>
@@ -53,9 +79,9 @@ export default function AnalyticsSection() {
                     <span className="text-sm">≤1% (Moderate)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={(analytics.probabilityDistribution.moderate / analytics.totalStreaks) * 100} className="w-32" />
+                    <Progress value={analytics ? (analytics.probabilityDistribution.moderate / analytics.totalStreaks) * 100 : 0} className="w-32" />
                     <span className="text-sm font-medium text-foreground" data-testid="moderate-count">
-                      {analytics.probabilityDistribution.moderate}
+                      {analytics?.probabilityDistribution.moderate || 0}
                     </span>
                   </div>
                 </div>
@@ -65,9 +91,9 @@ export default function AnalyticsSection() {
                     <span className="text-sm">≤5% (Low)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={(analytics.probabilityDistribution.low / analytics.totalStreaks) * 100} className="w-32" />
+                    <Progress value={analytics ? (analytics.probabilityDistribution.low / analytics.totalStreaks) * 100 : 0} className="w-32" />
                     <span className="text-sm font-medium text-foreground" data-testid="low-count">
-                      {analytics.probabilityDistribution.low}
+                      {analytics?.probabilityDistribution.low || 0}
                     </span>
                   </div>
                 </div>
@@ -82,7 +108,19 @@ export default function AnalyticsSection() {
             <CardTitle>Most Extreme Streaks</CardTitle>
           </CardHeader>
           <CardContent>
-            {analytics.topStreaks ? (
+            {isLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 border-b border-border">
+                    <div className="flex items-center space-x-3">
+                      <Skeleton className="w-6 h-6 rounded-full" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                ))}
+              </div>
+            ) : analytics?.topStreaks ? (
               <div className="space-y-3">
                 {analytics.topStreaks.map((streak) => (
                   <div
@@ -114,7 +152,7 @@ export default function AnalyticsSection() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary" data-testid="total-streaks">
-              {analytics.totalStreaks}
+              {isLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : analytics?.totalStreaks}
             </div>
             <div className="text-sm text-muted-foreground">Total Interesting Streaks</div>
           </CardContent>
@@ -122,7 +160,7 @@ export default function AnalyticsSection() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary" data-testid="average-length">
-              {analytics.averageStreakLength}
+              {isLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : analytics?.averageStreakLength}
             </div>
             <div className="text-sm text-muted-foreground">Average Streak Length</div>
           </CardContent>
@@ -130,7 +168,7 @@ export default function AnalyticsSection() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary" data-testid="extreme-streaks">
-              {analytics.extremeCount}
+              {isLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : analytics?.extremeCount}
             </div>
             <div className="text-sm text-muted-foreground">Extreme Probability (≤0.01%)</div>
           </CardContent>
@@ -138,7 +176,7 @@ export default function AnalyticsSection() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary" data-testid="highest-rating">
-              {analytics.highestRating}
+              {isLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : analytics?.highestRating}
             </div>
             <div className="text-sm text-muted-foreground">Highest Rating with Streak</div>
           </CardContent>
