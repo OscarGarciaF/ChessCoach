@@ -134,10 +134,13 @@ class DataService {
         this.processedPlayers.set(username, player);
       }
 
+      // Create unique streak ID using username and start time
+      const streakId = `streak-${username}-${jsonStreak.streak.start_time}`;
+      
       // Create games for this streak
       const games: Game[] = jsonStreak.streak.games.map((jsonGame, index) => ({
-        id: `game-${username}-${index}`,
-        streakId: `streak-${username}`,
+        id: `game-${username}-${jsonStreak.streak.start_time}-${index}`,
+        streakId: streakId,
         opponentUsername: jsonGame.opponent.username,
         opponentRating: jsonGame.opponent.rating,
         // Convert to percentage and round to 2 decimal places
@@ -149,7 +152,7 @@ class DataService {
 
       // Create streak with player and games
       const streak: StreakWithPlayer = {
-        id: `streak-${username}`,
+        id: streakId,
         playerId: player.id,
         streakLength: jsonStreak.streak.length,
         // Convert to percentage and round to 2 decimal places
