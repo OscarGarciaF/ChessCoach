@@ -160,7 +160,7 @@ Examples:
         help="Comma-separated titles to include"
     )
     parser.add_argument(
-        "--limit-players", type=int, default=20,
+        "--limit-players", type=int, default=None,
         help="Limit number of players for testing"
     )
     parser.add_argument(
