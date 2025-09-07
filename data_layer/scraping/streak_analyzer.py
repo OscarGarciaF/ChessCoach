@@ -105,6 +105,7 @@ def detect_win_streaks(
     current_streak_games: List[GameView] = []
     current_win_probabilities: List[float] = []
     streak_start_time: Optional[int] = None
+    player_username_lower = player.username.lower()
 
     def finalize_current_streak():
         """Finalize the current streak if it's interesting."""
@@ -159,9 +160,11 @@ def detect_win_streaks(
 
         opponent_stats = stats_cache.get(opponent_username_lower, {})
         opponent_rd = extract_rating_deviation(opponent_stats, rules, time_class)
+        my_stats = stats_cache.get(player_username_lower, {})
+        my_rd = extract_rating_deviation(my_stats, rules, time_class)
 
         # Calculate win probability
-        win_probability = expected_win_prob_glicko(my_rating, opponent_rating, opponent_rd)
+        win_probability = expected_win_prob_glicko(my_rating, opponent_rating, my_rd, opponent_rd)
         if win_probability is None:
             # If we can't calculate probability, use neutral value to avoid bias
             win_probability = 0.5

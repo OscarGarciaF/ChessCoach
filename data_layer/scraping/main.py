@@ -160,7 +160,7 @@ Examples:
         help="Comma-separated titles to include"
     )
     parser.add_argument(
-        "--limit-players", type=int, default=None,
+        "--limit-players", type=int, default=20,
         help="Limit number of players for testing"
     )
     parser.add_argument(
@@ -255,6 +255,8 @@ Examples:
             title = titled_players.get(username)
             profile = fetch_player_profile(username)
             stats = fetch_player_stats(username)
+            player_username_lower = username.lower()
+            stats_cache[player_username_lower] = stats  # cache for streak analysis
             
             player_info = create_player_info(username, title, profile, stats)
             
