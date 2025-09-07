@@ -12,6 +12,7 @@ PUBAPI = "https://api.chess.com/pub"
 
 # Available chess titles in order of preference (highest first)
 TITLE_ABBREVS = ["GM", "WGM", "IM", "WIM", "FM", "WFM", "NM", "WNM", "CM", "WCM"]
+RELEVANT_TITLES =  ["GM", "WGM", "IM", "WIM"]
 # Probability thresholds for classifying interesting streaks
 # Format: (label, decimal_probability)
 THRESHOLDS: List[Tuple[str, float]] = [

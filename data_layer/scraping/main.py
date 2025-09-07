@@ -40,7 +40,7 @@ from chess_api import (
     parse_time_window,
     setup_chess_client,
 )
-from config import THRESHOLDS, TITLE_ABBREVS
+from config import THRESHOLDS, TITLE_ABBREVS, RELEVANT_TITLES
 from streak_analyzer import analyze_player_streaks
 import boto3
 
@@ -156,7 +156,7 @@ Examples:
         help="Output directory (default: ./data)"
     )
     parser.add_argument(
-        "--titles", type=str, default=",".join(TITLE_ABBREVS),
+        "--titles", type=str, default=",".join(RELEVANT_TITLES),
         help="Comma-separated titles to include"
     )
     parser.add_argument(
