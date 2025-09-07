@@ -49,11 +49,11 @@ export default function Footer() {
             </p>
             <div className="mt-3">
               <a 
-                href="mailto:contact@interestingchess.com" 
+                href="mailto:garcia.oscar1729@gmail.com" 
                 className="text-sm text-primary hover:underline"
                 data-testid="footer-contact-email"
               >
-                contact@interestingchess.com
+                garcia.oscar1729@gmail.com
               </a>
             </div>
           </div>
