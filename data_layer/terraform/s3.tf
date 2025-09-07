@@ -59,5 +59,5 @@ resource "aws_s3_object" "scraping_code" {
   bucket = aws_s3_bucket.code.id
   key    = "${local.code_prefix}/scraping.zip"
   source = data.archive_file.scraping_code.output_path
-  etag   = filemd5(data.archive_file.scraping_code.output_path)
+  etag   = data.archive_file.scraping_code.output_md5
 }
