@@ -1,5 +1,4 @@
 import { type Player, type WinStreak, type Game, type StreakWithPlayer, type AnalyticsData } from "@shared/schema";
-import resultsData from "@/assets/results.json";
 
 // Types for the JSON data structure
 interface JsonPlayer {
@@ -53,16 +52,65 @@ interface JsonData {
 }
 
 class DataService {
-  private data: JsonData;
+  private data: JsonData | null = null;
   private processedPlayers: Map<string, Player> = new Map();
   private processedStreaks: StreakWithPlayer[] = [];
+  private isLoading = false;
+  private hasLoaded = false;
+  private error: string | null = null;
 
-  constructor() {
-    this.data = resultsData as JsonData;
-    this.processData();
+  async loadData(): Promise<void> {
+    if (this.hasLoaded || this.isLoading) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.error = null;
+
+    try {
+      const response = await fetch('/data/results.json');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+      }
+      
+      this.data = await response.json();
+      this.processData();
+      this.hasLoaded = true;
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : 'Failed to load data';
+      console.error('Failed to load results.json:', error);
+      
+      // Fallback to empty data structure
+      this.data = {
+        summary: {
+          window_days: 30,
+          players_processed: 0,
+          games_processed: 0,
+          streaks_found: 0,
+          counts_by_threshold: {
+            "≤5%": 0,
+            "≤1%": 0,
+            "≤0.1%": 0,
+            "≤0.01%": 0
+          },
+          generated_at: Date.now() / 1000
+        },
+        players: {},
+        interesting_streaks: []
+      };
+      this.processData();
+      this.hasLoaded = true;
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   private processData() {
+    if (!this.data) return;
+
+    this.processedPlayers.clear();
+    this.processedStreaks = [];
+
     // Process each streak and create the normalized data structures
     for (const jsonStreak of this.data.interesting_streaks) {
       const username = jsonStreak.username;
@@ -140,19 +188,22 @@ class DataService {
   }
 
   // Public methods that match the original API
-  getStreaksWithPlayer(): StreakWithPlayer[] {
+  async getStreaksWithPlayer(): Promise<StreakWithPlayer[]> {
+    await this.loadData();
     return this.processedStreaks;
   }
 
-  getAnalyticsData(): AnalyticsData {
+  async getAnalyticsData(): Promise<AnalyticsData> {
+    await this.loadData();
+    
     const streaks = this.processedStreaks;
-    const totalStreaks = streaks.length || this.data.summary.streaks_found || 0;
+    const totalStreaks = streaks.length || (this.data?.summary.streaks_found || 0);
     const averageStreakLength = totalStreaks > 0 
       ? streaks.reduce((sum, streak) => sum + streak.streakLength, 0) / totalStreaks 
       : 0;
     
     // Use data from JSON file for accurate counts
-    const counts = this.data.summary.counts_by_threshold || {};
+    const counts = this.data?.summary.counts_by_threshold || {};
     const probabilityDistribution = {
       extreme: counts["≤0.01%"] || 0,
       high: counts["≤0.1%"] || 0,
@@ -176,11 +227,26 @@ class DataService {
     };
   }
 
-  getSummaryData() {
-    return this.data.summary;
+  async getSummaryData() {
+    await this.loadData();
+    return this.data?.summary || {
+      players_processed: 0,
+      games_processed: 0,
+      generated_at: Date.now() / 1000,
+      window_days: 30
+    };
   }
 
-  getStreakById(id: string): StreakWithPlayer | undefined {
+  getLoadingState() {
+    return {
+      isLoading: this.isLoading,
+      hasLoaded: this.hasLoaded,
+      error: this.error
+    };
+  }
+
+  async getStreakById(id: string): Promise<StreakWithPlayer | undefined> {
+    await this.loadData();
     return this.processedStreaks.find(streak => streak.id === id);
   }
 }
