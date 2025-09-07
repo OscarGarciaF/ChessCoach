@@ -12,9 +12,9 @@ username = "your-chess-username"
 email    = "your-email@example.com"
 
 # Chess.com scraping configuration
-titles         = "GM,WGM,IM,WIM,FM,WFM,NM,WNM,CM,WCM"
+titles         = "GM,WGM,IM,WIM"
 days_window    = 30
-request_sleep_s = 0.25
+request_sleep_s = 0
 limit_players  = 0  # 0 for no limit, set to positive number for testing
 
 # Scheduling (cron expression for daily run at 03:05 UTC)
@@ -22,3 +22,5 @@ schedule_expression = "cron(5 3 * * ? *)"
 
 # CloudFront distribution (set to false to disable)
 create_cloudfront = true
+
+acm_certificate_arn = "arn:aws:acm:**"

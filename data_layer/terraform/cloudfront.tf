@@ -15,6 +15,9 @@ resource "aws_cloudfront_distribution" "cdn" {
   count               = var.create_cloudfront ? 1 : 0
   enabled             = true
   default_root_object = "index.html"
+  
+  # Add aliases when an ACM certificate ARN is provided; otherwise leave empty
+  aliases = var.acm_certificate_arn != null ? var.alternate_domain_names : []
 
   origin {
     origin_id                = "s3-origin"
@@ -43,7 +46,20 @@ resource "aws_cloudfront_distribution" "cdn" {
     geo_restriction { restriction_type = "none" }
   }
 
-  viewer_certificate { cloudfront_default_certificate = true }
+  dynamic "viewer_certificate" {
+    for_each = var.acm_certificate_arn != null ? [1] : []
+    content {
+      acm_certificate_arn            = var.acm_certificate_arn
+      ssl_support_method             = "sni-only"
+    }
+  }
+
+  dynamic "viewer_certificate" {
+    for_each = var.acm_certificate_arn == null ? [1] : []
+    content {
+      cloudfront_default_certificate = true
+    }
+  }
 }
 
 # Bucket policy allowing only CloudFront (OAC) to read

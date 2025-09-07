@@ -71,3 +71,16 @@ variable "scraping_dir_path" {
   default = null
   # Provide a value to override; if null/empty, we fallback to ${path.module}/../scraping in locals
 }
+
+# Optional: ARN of an already-created ACM certificate (must be in us-east-1 for CloudFront)
+variable "acm_certificate_arn" {
+  type    = string
+  default = null
+}
+
+# Alternate domain names (CNAMEs) to add to the CloudFront distribution when a custom
+# certificate is provided. Update if you need different domains.
+variable "alternate_domain_names" {
+  type    = list(string)
+  default = ["interestingchess.com", "www.interestingchess.com"]
+}
