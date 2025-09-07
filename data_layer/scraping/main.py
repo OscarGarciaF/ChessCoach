@@ -303,8 +303,12 @@ Examples:
     def streak_sort_key(streak):
         rating = streak.player.max_rating or -1
         return (-rating, streak.p_combined, -streak.length, streak.player.username)
-
-    all_streaks.sort(key=streak_sort_key)
+    
+    
+    try:
+        all_streaks.sort(key=streak_sort_key)
+    except Exception as e:
+        logger.warning(f"Failed to sort streaks: {e}", exc_info=True)
 
     # Serialize results
     output_streaks = [serialize_streak_for_output(streak) for streak in all_streaks]
@@ -325,9 +329,13 @@ Examples:
             prob = 10 # larger than any realistic probability (0 < p <= 1)
 
         return (-rating, prob)
-
-    output_streaks.sort(key=_output_sort_key)
     
+    
+    try:
+        output_streaks.sort(key=_output_sort_key)
+    except Exception as e:
+        logger.warning(f"Failed to sort output streaks: {e}", exc_info=True)
+
     # Create summary with games count
     summary = {
         "window_days": args.days,
