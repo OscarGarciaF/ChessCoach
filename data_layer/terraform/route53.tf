@@ -1,4 +1,5 @@
 // Look up the existing public hosted zone for the domain you said you already have.
+// The domain was purchased on spaceship.com and the nameservers point to Route53.
 data "aws_route53_zone" "primary" {
 	name         = "interestingchess.com"
 	private_zone = false
