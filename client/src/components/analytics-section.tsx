@@ -56,7 +56,7 @@ export default function AnalyticsSection() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Progress value={analytics ? (analytics.probabilityDistribution.extreme / analytics.totalStreaks) * 100 : 0} className="w-32" />
-                    <span className="text-sm font-medium text-foreground" data-testid="extreme-count">
+                    <span className="text-sm font-medium text-foreground w-12 text-right" data-testid="extreme-count">
                       {analytics?.probabilityDistribution.extreme || 0}
                     </span>
                   </div>
@@ -68,7 +68,7 @@ export default function AnalyticsSection() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Progress value={analytics ? (analytics.probabilityDistribution.high / analytics.totalStreaks) * 100 : 0} className="w-32" />
-                    <span className="text-sm font-medium text-foreground" data-testid="high-count">
+                    <span className="text-sm font-medium text-foreground w-12 text-right" data-testid="high-count">
                       {analytics?.probabilityDistribution.high || 0}
                     </span>
                   </div>
@@ -80,7 +80,7 @@ export default function AnalyticsSection() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Progress value={analytics ? (analytics.probabilityDistribution.moderate / analytics.totalStreaks) * 100 : 0} className="w-32" />
-                    <span className="text-sm font-medium text-foreground" data-testid="moderate-count">
+                    <span className="text-sm font-medium text-foreground w-12 text-right" data-testid="moderate-count">
                       {analytics?.probabilityDistribution.moderate || 0}
                     </span>
                   </div>
@@ -92,7 +92,7 @@ export default function AnalyticsSection() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Progress value={analytics ? (analytics.probabilityDistribution.low / analytics.totalStreaks) * 100 : 0} className="w-32" />
-                    <span className="text-sm font-medium text-foreground" data-testid="low-count">
+                    <span className="text-sm font-medium text-foreground w-12 text-right" data-testid="low-count">
                       {analytics?.probabilityDistribution.low || 0}
                     </span>
                   </div>
