@@ -140,7 +140,8 @@ class DataService {
         streakId: `streak-${username}`,
         opponentUsername: jsonGame.opponent.username,
         opponentRating: jsonGame.opponent.rating,
-        winProbability: jsonGame.p_win * 100, // Convert to percentage
+        // Convert to percentage and round to 2 decimal places
+        winProbability: Number((jsonGame.p_win * 100).toFixed(2)),
         gameUrl: jsonGame.url,
         gameDate: new Date(jsonGame.end_time * 1000),
         result: "win" as const
@@ -151,7 +152,8 @@ class DataService {
         id: `streak-${username}`,
         playerId: player.id,
         streakLength: jsonStreak.streak.length,
-        probability: jsonStreak.streak.prob * 100, // Convert to percentage
+        // Convert to percentage and round to 2 decimal places
+        probability: Number((jsonStreak.streak.prob * 100).toFixed(2)),
         probabilityTier: this.mapThresholdToTier(jsonStreak.streak.threshold),
         startDate: new Date(jsonStreak.streak.start_time * 1000),
         endDate: new Date(jsonStreak.streak.end_time * 1000),
