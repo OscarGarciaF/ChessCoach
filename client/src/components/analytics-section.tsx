@@ -55,7 +55,9 @@ export default function AnalyticsSection() {
                     <span className="text-sm">≤0.01% (Extreme)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={analytics ? (analytics.probabilityDistribution.extreme / analytics.totalStreaks) * 100 : 0} className="w-32" />
+                    <div className="w-32">
+                      <Progress value={analytics ? (analytics.probabilityDistribution.extreme / analytics.totalStreaks) * 100 : 0} className="w-full" />
+                    </div>
                     <span className="text-sm font-medium text-foreground" data-testid="extreme-count">
                       {analytics?.probabilityDistribution.extreme || 0}
                     </span>
@@ -67,7 +69,9 @@ export default function AnalyticsSection() {
                     <span className="text-sm">≤0.1% (High)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={analytics ? (analytics.probabilityDistribution.high / analytics.totalStreaks) * 100 : 0} className="w-32" />
+                    <div className="w-32">
+                      <Progress value={analytics ? (analytics.probabilityDistribution.high / analytics.totalStreaks) * 100 : 0} className="w-full" />
+                    </div>
                     <span className="text-sm font-medium text-foreground" data-testid="high-count">
                       {analytics?.probabilityDistribution.high || 0}
                     </span>
@@ -79,7 +83,9 @@ export default function AnalyticsSection() {
                     <span className="text-sm">≤1% (Moderate)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={analytics ? (analytics.probabilityDistribution.moderate / analytics.totalStreaks) * 100 : 0} className="w-32" />
+                    <div className="w-32">
+                      <Progress value={analytics ? (analytics.probabilityDistribution.moderate / analytics.totalStreaks) * 100 : 0} className="w-full" />
+                    </div>
                     <span className="text-sm font-medium text-foreground" data-testid="moderate-count">
                       {analytics?.probabilityDistribution.moderate || 0}
                     </span>
@@ -91,7 +97,9 @@ export default function AnalyticsSection() {
                     <span className="text-sm">≤5% (Low)</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={analytics ? (analytics.probabilityDistribution.low / analytics.totalStreaks) * 100 : 0} className="w-32" />
+                    <div className="w-32">
+                      <Progress value={analytics ? (analytics.probabilityDistribution.low / analytics.totalStreaks) * 100 : 0} className="w-full" />
+                    </div>
                     <span className="text-sm font-medium text-foreground" data-testid="low-count">
                       {analytics?.probabilityDistribution.low || 0}
                     </span>
