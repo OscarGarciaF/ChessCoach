@@ -251,110 +251,110 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
               </thead>
               <tbody className="bg-card divide-y divide-border">
                 {filteredAndSortedStreaks?.map((streak) => (
-                  <tr
-                    key={`main-${streak.id}`}
-                    className="table-row cursor-pointer hover:bg-muted/50"
-                    onClick={() => toggleExpand(streak.id)}
-                    data-testid={`streak-row-${streak.id}`}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <img
-                          src={streak.player.avatarUrl || "https://www.chess.com/bundles/web/images/user-image.007dad08.svg"}
-                          alt={`${streak.player.username} avatar`}
-                          className="w-8 h-8 rounded-full mr-3"
-                          data-testid={`avatar-${streak.player.username}`}
-                        />
-                        <div>
-                          <div className="text-sm font-medium text-foreground">
-                            {streak.player.username}
+                  <>
+                    <tr
+                      key={`main-${streak.id}`}
+                      className="table-row cursor-pointer hover:bg-muted/50"
+                      onClick={() => toggleExpand(streak.id)}
+                      data-testid={`streak-row-${streak.id}`}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <img
+                            src={streak.player.avatarUrl || "https://www.chess.com/bundles/web/images/user-image.007dad08.svg"}
+                            alt={`${streak.player.username} avatar`}
+                            className="w-8 h-8 rounded-full mr-3"
+                            data-testid={`avatar-${streak.player.username}`}
+                          />
+                          <div>
+                            <div className="text-sm font-medium text-foreground">
+                              {streak.player.username}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {streak.player.title}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {streak.player.title}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-foreground font-medium">
-                        {streak.player.rating}
-                      </div>
-                      <div className="text-xs text-muted-foreground capitalize">
-                        {streak.player.ratingCategory}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-semibold text-foreground">
-                        {streak.streakLength} wins
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        vs {streak.averageOpponentRating}+ avg
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge className={getProbabilityTierStyle(streak.probabilityTier)}>
-                        {getProbabilityTierLabel(streak.probabilityTier, streak.probability)}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
-                      {new Date(streak.startDate).toLocaleDateString()} - {new Date(streak.endDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      {expandedRows.has(streak.id) ? (
-                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {filteredAndSortedStreaks?.map((streak) => 
-                  expandedRows.has(streak.id) && (
-                    <tr key={`expanded-${streak.id}`}>
-                      <td colSpan={6} className="px-6 py-4 bg-muted">
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-foreground mb-3">Game Breakdown:</h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {streak.games.map((game, index) => (
-                              <div
-                                key={game.id}
-                                className="bg-card rounded p-3 border border-border"
-                                data-testid={`game-${game.id}`}
-                              >
-                                <div className="text-xs text-muted-foreground">
-                                  Game {index + 1}
-                                </div>
-                                <div className="text-sm">
-                                  vs {game.opponentUsername} ({game.opponentRating}) -{" "}
-                                  <span className="text-primary font-medium">Win</span>
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Win probability: {game.winProbability}%
-                                </div>
-                                {game.gameUrl && (
-                                  <a
-                                    href={game.gameUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-primary hover:underline"
-                                    data-testid={`game-link-${game.id}`}
-                                  >
-                                    View Game
-                                  </a>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          {streak.games.length < streak.streakLength && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              + {streak.streakLength - streak.games.length} more games
-                            </p>
-                          )}
                         </div>
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-foreground font-medium">
+                          {streak.player.rating}
+                        </div>
+                        <div className="text-xs text-muted-foreground capitalize">
+                          {streak.player.ratingCategory}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-semibold text-foreground">
+                          {streak.streakLength} wins
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          vs {streak.averageOpponentRating}+ avg
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge className={getProbabilityTierStyle(streak.probabilityTier)}>
+                          {getProbabilityTierLabel(streak.probabilityTier, streak.probability)}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
+                        {new Date(streak.startDate).toLocaleDateString()} - {new Date(streak.endDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        {expandedRows.has(streak.id) ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </td>
                     </tr>
-                  )
-                )}
+                    {expandedRows.has(streak.id) && (
+                      <tr key={`expanded-${streak.id}`}>
+                        <td colSpan={6} className="px-6 py-4 bg-muted">
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-foreground mb-3">Game Breakdown:</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {streak.games.map((game, index) => (
+                                <div
+                                  key={game.id}
+                                  className="bg-card rounded p-3 border border-border"
+                                  data-testid={`game-${game.id}`}
+                                >
+                                  <div className="text-xs text-muted-foreground">
+                                    Game {index + 1}
+                                  </div>
+                                  <div className="text-sm">
+                                    vs {game.opponentUsername} ({game.opponentRating}) -{" "}
+                                    <span className="text-primary font-medium">Win</span>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Win probability: {game.winProbability}%
+                                  </div>
+                                  {game.gameUrl && (
+                                    <a
+                                      href={game.gameUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-primary hover:underline"
+                                      data-testid={`game-link-${game.id}`}
+                                    >
+                                      View Game
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            {streak.games.length < streak.streakLength && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                + {streak.streakLength - streak.games.length} more games
+                              </p>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                ))}
               </tbody>
             </table>
         </div>
