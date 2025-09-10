@@ -134,8 +134,8 @@ resource "aws_autoscaling_group" "ecs" {
   health_check_type   = "EC2"
 
   min_size         = 0
-  max_size         = 2
-  desired_capacity = 1
+  max_size         = 1
+  desired_capacity = 0
 
   # Use mixed instances policy to prefer spot instances
   mixed_instances_policy {
