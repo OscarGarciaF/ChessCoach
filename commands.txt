@@ -1,0 +1,4 @@
+npm ci
+npm run build
+cd data_layer\terraform
+terraform apply --auto-approve
