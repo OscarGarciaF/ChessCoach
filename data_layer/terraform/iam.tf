@@ -1,5 +1,5 @@
 ########################
-# IAM for ECS Fargate
+# IAM for ECS EC2
 ########################
 
 # ECS execution role (for pulling container images and writing logs)
@@ -51,31 +51,59 @@ resource "aws_iam_role_policy" "ecs_task_s3_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "ReadCode"
-        Effect = "Allow"
-        Action = ["s3:GetObject"]
+        Sid      = "ReadCode"
+        Effect   = "Allow"
+        Action   = ["s3:GetObject"]
         Resource = "${aws_s3_bucket.code.arn}/${local.code_prefix}/*"
       },
       {
-        Sid    = "ListBucketCode"
-        Effect = "Allow"
-        Action = ["s3:ListBucket"]
+        Sid      = "ListBucketCode"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
         Resource = aws_s3_bucket.code.arn
       },
       {
-        Sid    = "WriteOutputs"
-        Effect = "Allow"
-        Action = ["s3:PutObject", "s3:PutObjectAcl"]
+        Sid      = "WriteOutputs"
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:PutObjectAcl"]
         Resource = "${aws_s3_bucket.data.arn}/${local.latest_prefix}/*"
       },
       {
-        Sid    = "ListBucketData"
-        Effect = "Allow"
-        Action = ["s3:ListBucket"]
+        Sid      = "ListBucketData"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
         Resource = aws_s3_bucket.data.arn
       }
     ]
   })
+}
+
+# EC2 instance role for ECS
+resource "aws_iam_role" "ecs_instance_role" {
+  name = "${local.short}-ecs-instance-role-${local.suffix}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance_role_policy" {
+  role       = aws_iam_role.ecs_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "ecs_instance" {
+  name = "${local.short}-ecs-instance-profile-${local.suffix}"
+  role = aws_iam_role.ecs_instance_role.name
 }
 
 # EventBridge -> ECS role

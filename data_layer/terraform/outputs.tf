@@ -19,7 +19,12 @@ output "ecs_task_definition_arn" {
   value = aws_ecs_task_definition.chess_scraper.arn
 }
 
+output "ecs_autoscaling_group_name" {
+  value       = aws_autoscaling_group.ecs.name
+  description = "Auto Scaling Group name for ECS EC2 instances"
+}
+
 output "aws_region" {
-  value = var.aws_region
+  value       = var.aws_region
   description = "AWS region for ECS and S3 configuration"
 }

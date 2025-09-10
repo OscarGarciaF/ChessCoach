@@ -15,7 +15,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   count               = var.create_cloudfront ? 1 : 0
   enabled             = true
   default_root_object = "index.html"
-  
+
   # Add aliases when an ACM certificate ARN is provided; otherwise leave empty
   aliases = var.acm_certificate_arn != null ? var.alternate_domain_names : []
 
@@ -49,9 +49,9 @@ resource "aws_cloudfront_distribution" "cdn" {
   dynamic "viewer_certificate" {
     for_each = var.acm_certificate_arn != null ? [1] : []
     content {
-      acm_certificate_arn            = var.acm_certificate_arn
-      ssl_support_method             = "sni-only"
-      minimum_protocol_version       = "TLSv1.2_2021"
+      acm_certificate_arn      = var.acm_certificate_arn
+      ssl_support_method       = "sni-only"
+      minimum_protocol_version = "TLSv1.2_2021"
     }
   }
 

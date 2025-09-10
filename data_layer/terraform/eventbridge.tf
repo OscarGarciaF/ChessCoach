@@ -1,5 +1,5 @@
 ########################
-# EventBridge Schedule -> Run ECS Fargate Task
+# EventBridge Schedule -> Run ECS EC2 Task
 ########################
 
 resource "aws_cloudwatch_event_rule" "daily" {
@@ -15,13 +15,10 @@ resource "aws_cloudwatch_event_target" "ecs_target" {
 
   ecs_target {
     task_definition_arn = aws_ecs_task_definition.chess_scraper.arn
-    launch_type         = "FARGATE"
+    launch_type         = "EC2"
     platform_version    = "LATEST"
-    
-    network_configuration {
-      subnets          = data.aws_subnets.default.ids
-      security_groups  = [aws_security_group.ecs_tasks.id]
-      assign_public_ip = true  # Needed for Fargate to download container images
-    }
+    task_count          = 1
+
+    # No network_configuration needed for EC2 launch type with bridge networking
   }
 }

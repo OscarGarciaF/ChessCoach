@@ -51,7 +51,7 @@ variable "request_sleep_s" {
 variable "limit_players" {
   type    = number
   default = 0
-}   # 0 = no limit
+} # 0 = no limit
 
 # Schedule: cron(5 3 * * ? *) == 03:05 UTC daily
 variable "schedule_expression" {

@@ -12,7 +12,7 @@ locals {
   # if dist_dir exists, gather files recursively; otherwise use empty list to avoid errors
   # `fileexists()` errors for directories, so use `can(fileset(...))` which succeeds
   # only when the directory exists and fileset can read it.
-  dist_files = can(fileset(local.dist_dir, "**/*")) ? fileset(local.dist_dir, "**/*") : []
+  dist_files      = can(fileset(local.dist_dir, "**/*")) ? fileset(local.dist_dir, "**/*") : []
   dist_dir_exists = can(fileset(local.dist_dir, "**/*"))
 }
 
@@ -22,7 +22,7 @@ resource "aws_s3_object" "dist_files" {
   bucket = aws_s3_bucket.data.id
 
   # Put files at the bucket root preserving relative path from dist
-  key    = each.key
+  key = each.key
 
   source = "${local.dist_dir}/${each.value}"
 
@@ -86,7 +86,7 @@ resource "null_resource" "dist_files_changed" {
 }
 
 output "dist_upload_count" {
-  value = length(local.dist_files)
+  value       = length(local.dist_files)
   description = "Number of files in local dist directory that will be uploaded to S3 as individual objects."
 }
 
