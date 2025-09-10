@@ -26,7 +26,6 @@ import argparse
 import json
 import logging
 import os
-import sys
 import time
 from urllib.parse import urlparse
 from typing import Dict
