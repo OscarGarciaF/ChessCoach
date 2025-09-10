@@ -5,6 +5,19 @@
 locals {
   # build the optional CLI arg for limiting players so the long jsonencode string stays readable
   limit_players_arg = var.limit_players > 0 ? "--limit-players ${var.limit_players}" : ""
+  # preferred instances in order of cost effectiveness
+  preferred_instances = ["t4g.nano", "t3a.nano", "t3.nano", "t2.nano", "t4g.micro", "t3a.micro", "t3.micro", "t2.micro"]
+  /*
+  spot instances cost per hour
+  t4g.nano: $0.0042
+  t3a.nano: $0.0047
+  t3.nano: 	$0.0052
+  t2.nano: $0.0058
+  t4g.micro: $0.0084
+  t3a.micro: $0.0094
+  t3.micro: $0.0104
+  t2.micro: $0.0116
+  */
 }
 
 resource "aws_ecs_cluster" "main" {
