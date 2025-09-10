@@ -1,5 +1,5 @@
 ########################
-# ECS Fargate: cluster, task definition, log group
+# ECS: cluster, task definition, log group
 ########################
 
 locals {

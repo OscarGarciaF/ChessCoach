@@ -1,5 +1,5 @@
 ########################
-# VPC (default) - Used by ECS Fargate tasks
+# VPC (default) - Used by ECS tasks
 ########################
 
 data "aws_vpc" "default" { default = true }
