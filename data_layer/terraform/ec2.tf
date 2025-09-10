@@ -8,7 +8,7 @@ locals {
   # preferred instances in order of cost effectiveness
   preferred_instances = ["t4g.nano", "t3a.nano", "t3.nano", "t2.nano", "t4g.micro", "t3a.micro", "t3.micro", "t2.micro"]
   /*
-  spot instances cost per hour
+  on demand instances cost per hour
   t4g.nano: $0.0042
   t3a.nano: $0.0047
   t3.nano: 	$0.0052
@@ -155,7 +155,7 @@ resource "aws_autoscaling_group" "ecs" {
     instances_distribution {
       on_demand_base_capacity                  = 0
       on_demand_percentage_above_base_capacity = 0
-      spot_allocation_strategy                 = "diversified"
+      spot_allocation_strategy                 = "price-capacity-optimized"
       spot_max_price                           = "" # Use on-demand price as max
     }
   }

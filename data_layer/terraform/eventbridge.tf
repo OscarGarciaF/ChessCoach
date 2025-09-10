@@ -16,9 +16,6 @@ resource "aws_cloudwatch_event_target" "ecs_target" {
   ecs_target {
     task_definition_arn = aws_ecs_task_definition.chess_scraper.arn
     launch_type         = "EC2"
-    platform_version    = "LATEST"
     task_count          = 1
-
-    # No network_configuration needed for EC2 launch type with bridge networking
   }
 }
