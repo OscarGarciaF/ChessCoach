@@ -23,6 +23,8 @@ class GameView:
         opponent_rating: Opponent's rating after the game
         winner_rating: Winner's rating after the game
         p_win: Expected probability of winning this game (0.0 to 1.0)
+        estimated_winner_rating: Estimated pre-game winner rating
+        estimated_loser_rating: Estimated pre-game loser rating
     """
     end_time: int
     rules: str
@@ -32,6 +34,8 @@ class GameView:
     opponent_rating: Optional[int]
     winner_rating: Optional[int]
     p_win: float
+    estimated_winner_rating: Optional[int] = None
+    estimated_loser_rating: Optional[int] = None
 
 
 @dataclass

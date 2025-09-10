@@ -110,6 +110,8 @@ def serialize_streak_for_output(streak):
                     "rating": game.opponent_rating
                 },
                 "winner_rating": game.winner_rating,
+                "estimated_winner_rating": game.estimated_winner_rating,
+                "estimated_loser_rating": game.estimated_loser_rating,
                 "p_win": game.p_win,
                 "url": game.url
             } for game in streak.games]

@@ -24,6 +24,19 @@ def to_mu(rating: float) -> float:
     return (rating - GLICKO_BASE_RATING) / GLICKO_SCALE
 
 
+def from_mu(mu: float) -> float:
+    """
+    Convert a Glicko μ (mu) value back to standard rating scale.
+    
+    Args:
+        mu: Rating in Glicko μ scale
+        
+    Returns:
+        Rating converted to standard scale
+    """
+    return mu * GLICKO_SCALE + GLICKO_BASE_RATING
+
+
 def to_phi(rd: float) -> float:
     """
     Convert a rating deviation (RD) to the Glicko φ (phi) scale.
@@ -146,44 +159,36 @@ def _estimate_pre_diff_from_post(
     mu_l_pre = mu_l_post + delta_l
     return d_pre, mu_w_pre, mu_l_pre, delta_w, delta_l
 
-
 def expected_win_prob_glicko(
-    r_winner: Optional[int]=None,
-    r_loser: Optional[int]=None,
-    rd_winner: Optional[int]=None,
-    rd_loser: Optional[int]=None,
+    r_winner: Optional[int] = None,
+    r_loser: Optional[int] = None,
+    rd_winner: Optional[int] = None,
+    rd_loser: Optional[int] = None,
     estimate_pregame: bool = True,
     rd_inflation_factor: float = 1.0
-) -> Optional[float]:
+) -> Tuple[Optional[float], Optional[int], Optional[int]]:
     """
-    Best-approximation Glicko win probability for the *winner* of a completed game.
-
-    Backward-compatible: if called with only (r_winner, r_loser, rd_loser) it behaves
-    like before, but if `rd_winner` is provided it will use both RDs and (by default)
-    estimate the pre-game gap to reduce post-game bias.
+    Calculate Glicko win probability and return estimated pre-game ratings.
 
     Args:
         r_winner: Winner's *post-game* rating (standard scale).
         r_loser:  Loser's  *post-game* rating (standard scale).
         rd_loser: Loser's  (live) RD, best available approximation.
-        rd_winner: Winner's (live) RD, best available approximation. If not given,
-                   falls back to the legacy "use opponent RD only" path.
-        estimate_pregame: If True, estimate pre-game rating difference via a fixed-point
-                   Glicko inversion using both RDs; otherwise use post-game ratings directly.
-        rd_inflation_factor: Optional multiplier to slightly inflate both RDs if you suspect
-                   today's RDs are lower than at match time (e.g., 1.05).
+        rd_winner: Winner's (live) RD, best available approximation.
+        estimate_pregame: If True, estimate pre-game rating difference.
+        rd_inflation_factor: Optional multiplier to inflate both RDs.
 
     Returns:
-        float in [0, 1] — estimated *pre-game* probability that the winner would win;
-        or None if ratings are unavailable.
+        Tuple of (probability, estimated_winner_rating, estimated_loser_rating)
+        All ratings rounded to integers. Returns (None, None, None) if unavailable.
     """
     if r_winner is None or r_loser is None:
-        return None
+        return None, None, None
 
     # Legacy path: only loser's RD available → original behavior (opponent RD only)
     if rd_loser is None:
         p = expected_win_prob_elo(r_winner, r_loser)
-        return p
+        return p, r_winner, r_loser
     
     if rd_winner is None:
         # Only loser's RD available → use original Glicko logic (no pre-game debias)
@@ -192,8 +197,7 @@ def expected_win_prob_glicko(
         phi_l = to_phi(float(rd_loser))
         g = g_function(phi_l)
         p = expit(g * (mu_w - mu_l))  # original logic
-        # If user asked to "debias" but we lack winner RD, we cannot reliably invert.
-        return p
+        return p, r_winner, r_loser
 
     # Best path: both RDs available → use both in expectancy and pre-game debias
     mu_w_post = to_mu(float(r_winner))
@@ -207,13 +211,16 @@ def expected_win_prob_glicko(
         )
         # Use symmetric probability with combined RD (complements to 1)
         p = _expected_prob_symmetric(mu_w_pre, mu_l_pre, phi_w, phi_l)
+        
+        # Convert estimated pre-game ratings back to standard scale and round
+        estimated_winner_rating = round(from_mu(mu_w_pre))
+        estimated_loser_rating = round(from_mu(mu_l_pre))
 
-        return p
+        return p, estimated_winner_rating, estimated_loser_rating
     else:
         # No debiasing: use post-game ratings with symmetric combined-RD probability
         p = _expected_prob_symmetric(mu_w_post, mu_l_post, phi_w, phi_l)
-        return p
-
+        return p, r_winner, r_loser
 
 
 def expected_win_prob_elo(r_winner: int, r_loser: int) -> float:

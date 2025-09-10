@@ -163,11 +163,15 @@ def detect_win_streaks(
         my_stats = stats_cache.get(player_username_lower, {})
         my_rd = extract_rating_deviation(my_stats, rules, time_class)
 
-        # Calculate win probability
-        win_probability = expected_win_prob_glicko(my_rating, opponent_rating, my_rd, opponent_rd)
+        # Calculate win probability and estimated ratings
+        win_probability, estimated_winner_rating, estimated_loser_rating = expected_win_prob_glicko(
+            my_rating, opponent_rating, my_rd, opponent_rd
+        )
         if win_probability is None:
             # If we can't calculate probability, use neutral value to avoid bias
             win_probability = 0.5
+            estimated_winner_rating = my_rating
+            estimated_loser_rating = opponent_rating
 
         # Initialize streak if this is the first win
         if not current_streak_games:
@@ -182,7 +186,9 @@ def detect_win_streaks(
             opponent_username=opponent_username,
             opponent_rating=opponent_rating if isinstance(opponent_rating, int) else None,
             winner_rating=my_rating if isinstance(my_rating, int) else None,
-            p_win=float(win_probability)
+            p_win=float(win_probability),
+            estimated_winner_rating=estimated_winner_rating,
+            estimated_loser_rating=estimated_loser_rating
         )
         
         current_streak_games.append(game_view)
