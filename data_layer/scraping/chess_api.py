@@ -148,10 +148,15 @@ def fetch_month_games(archive_url: str) -> List[dict]:
         response = chessdotcom.get_player_games_by_month(username, year, month)
         if not response or not hasattr(response, 'games'):
             return []
-        
+
+        included_rules = ['chess', 'chess960']
+
         # Convert games to dictionary format
         games = []
         for game in response.games:
+            if game.rules not in included_rules:
+                # filter casual games
+                continue
             game_dict = {
                 'url': game.url,
                 'pgn': game.pgn,
@@ -173,7 +178,6 @@ def fetch_month_games(archive_url: str) -> List[dict]:
                 }
             }
             games.append(game_dict)
-        
         return games
     except Exception:
         return []
