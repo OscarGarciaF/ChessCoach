@@ -211,7 +211,7 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
                       data-testid="sort-rating"
                     >
                       <span className="flex items-center">
-                        Rating <ArrowUpDown className="ml-1 h-3 w-3" />
+                        Max Rating <ArrowUpDown className="ml-1 h-3 w-3" />
                       </span>
                     </Button>
                   </th>
@@ -279,16 +279,10 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
                       <div className="text-sm text-foreground font-medium">
                         {streak.player.rating}
                       </div>
-                      <div className="text-xs text-muted-foreground capitalize">
-                        {streak.player.ratingCategory}
-                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-semibold text-foreground">
                         {streak.streakLength} wins
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        vs {streak.averageOpponentRating}+ avg
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -323,7 +317,7 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
                                   Game {index + 1}
                                 </div>
                                 <div className="text-sm">
-                                  vs {game.opponentUsername} ({game.opponentRating}) -{" "}
+                                  {streak.player.rating} vs {game.opponentUsername} ({game.opponentRating}) -{" "}
                                   <span className="text-primary font-medium">Win</span>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
