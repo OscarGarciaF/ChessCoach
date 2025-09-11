@@ -317,7 +317,7 @@ export default function StreaksTable({ streaks }: StreaksTableProps) {
                                   Game {index + 1}
                                 </div>
                                 <div className="text-sm">
-                                  ({streak.player.rating}) vs {game.opponentUsername} ({game.opponentRating}) -{" "}
+                                  ({game.winnerRating}) vs {game.opponentUsername} ({game.opponentRating}) -{" "}
                                   <span className="text-primary font-medium">Win</span>
                                 </div>
                                 <div className="text-xs text-muted-foreground">

@@ -31,6 +31,7 @@ export const games = pgTable("games", {
   streakId: varchar("streak_id").notNull().references(() => winStreaks.id),
   opponentUsername: text("opponent_username").notNull(),
   opponentRating: integer("opponent_rating").notNull(),
+  winnerRating: integer("winner_rating").notNull(),
   winProbability: real("win_probability").notNull(), // Individual game win probability
   gameUrl: text("game_url"),
   gameDate: timestamp("game_date").notNull(),

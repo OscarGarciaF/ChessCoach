@@ -143,6 +143,7 @@ class DataService {
         streakId: streakId,
         opponentUsername: jsonGame.opponent.username,
         opponentRating: jsonGame.opponent.rating,
+        winnerRating: jsonGame.winner_rating,
         // Convert to percentage and round to 2 decimal places
         winProbability: Number((jsonGame.p_win * 100).toFixed(4)),
         gameUrl: jsonGame.url,
