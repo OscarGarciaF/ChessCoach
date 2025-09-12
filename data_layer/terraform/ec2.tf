@@ -6,19 +6,13 @@ locals {
   # build the optional CLI arg for limiting players so the long jsonencode string stays readable
   limit_players_arg = var.limit_players > 0 ? "--limit-players ${var.limit_players}" : ""
   # preferred instances in order of cost effectiveness (x86_64 only for compatibility)
-  preferred_instances = ["t3a.nano", "t3.nano", "t2.nano", "t3a.micro", "t3.micro", "t2.micro"]
+  # Updated: Start with micro instances that have enough RAM for the task (1GB+)
+  preferred_instances = ["t3a.micro", "t3.micro", "t2.micro"]
   /*
   on demand instances cost per hour (x86_64 instances only)
-  t3a.nano: $0.0047
-  t3.nano: 	$0.0052
-  t2.nano: $0.0058
   t3a.micro: $0.0094
   t3.micro: $0.0104
   t2.micro: $0.0116
-  
-  Note: t4g instances (ARM64) removed for architecture consistency
-  t4g.nano: $0.0042 (cheapest but ARM64)
-  t4g.micro: $0.0084 (ARM64)
   */
 }
 
@@ -113,8 +107,21 @@ resource "aws_launch_template" "ecs_instance" {
 
   user_data = base64encode(<<-EOF
     #!/bin/bash
+    # Enhanced user data with logging and error handling
+    exec > >(tee /var/log/ecs-user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+    
+    echo "Starting ECS configuration..."
     echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
     echo ECS_ENABLE_SPOT_INSTANCE_DRAINING=true >> /etc/ecs/ecs.config
+    echo ECS_ENABLE_CONTAINER_METADATA=true >> /etc/ecs/ecs.config
+    echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","awslogs"]' >> /etc/ecs/ecs.config
+    
+    # Restart ECS agent to pick up new config
+    echo "Restarting ECS agent..."
+    stop ecs
+    start ecs
+    
+    echo "ECS configuration complete"
   EOF
   )
 
@@ -179,8 +186,8 @@ resource "aws_ecs_task_definition" "chess_scraper" {
   family                   = "${local.short}-chess-scraper"
   requires_compatibilities = ["EC2"]
   network_mode             = "bridge"
-  cpu                      = 256 # 0.25 vCPU - very cost effective
-  memory                   = 512 # 512MB RAM (reduced for EC2 efficiency)
+  cpu                      = 256
+  memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
 
