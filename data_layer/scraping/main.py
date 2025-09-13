@@ -38,6 +38,7 @@ from chess_api import (
     fetch_titled_players,
     parse_time_window,
     setup_chess_client,
+    time_controls_seen,
 )
 from config import THRESHOLDS, TITLE_ABBREVS, RELEVANT_TITLES
 from streak_analyzer import analyze_player_streaks
@@ -355,7 +356,15 @@ Examples:
         "players": players_data,
         "interesting_streaks": output_streaks
     }
-    
+
+    # Add overall time controls seen across all fetched games (deduplicated and sorted)
+    try:
+        # time_controls_seen is a set in chess_api; convert to a sorted list for JSON
+        results["time_controls_seen"] = sorted(list(time_controls_seen)) if time_controls_seen else []
+    except Exception as e:
+        logger.warning("Failed to include time_controls_seen in results: %s", e, exc_info=True)
+        results["time_controls_seen"] = []
+
     results_file = os.path.join(args.out, "results.json")
     with open(results_file, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, separators=(",", ":"), indent=2)
