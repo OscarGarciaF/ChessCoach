@@ -382,6 +382,7 @@ Examples:
     logger.info("Processed %d games", total_games_processed)
     logger.info("Found %d interesting streaks", len(all_streaks))
     logger.info("Results written to: %s", results_file)
+    logger.info("Time controls seen: %s", results.get("time_controls_seen", []))
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ resource "aws_cloudwatch_event_target" "ecs_target" {
 
   ecs_target {
     task_definition_arn = aws_ecs_task_definition.chess_scraper.arn
-    launch_type         = "EC2"
     task_count          = 1
+    enable_ecs_managed_tags = true
   }
 }
