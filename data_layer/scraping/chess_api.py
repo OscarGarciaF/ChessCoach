@@ -1,7 +1,7 @@
 """
 Chess.com API interaction functions.
 
-This module provides high-level functions for interacting with the Chess.com Public API,
+This module provides high-level functions for interacting withdef fetch_player_stats(username: str) -> dict:c API,
 including fetching player data, game archives, and statistics.
 
 Uses the official chess.com Python module for reliable API interactions.
@@ -14,8 +14,13 @@ import logging
 import chessdotcom
 from chessdotcom import Client
 from player_games_by_basetime_increment import get_player_games_by_basetime_increment
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 from models import PlayerInfo
+
+# Common time controls (base time in seconds, increment in seconds)
+TIME_CONTROLS = [(180,0), (600,0), (60,0), (300,0), (180,1), (180,2)]
+
 
 logger = logging.getLogger(__name__)
 
@@ -100,73 +105,71 @@ def fetch_titled_players(
     
     return players
 
+time_out = 7  # seconds
 
-def fetch_player_archives(username: str) -> List[str]:
+def fetch_games_by_basetime_increment(
+    username: str, 
+    basetime: int, 
+    increment: int,
+    start_time: int,
+    end_time: int
+) -> List[dict]:
     """
-    Fetch the list of monthly game archive URLs for a player.
+    Fetch all games for a player by specific basetime and increment within time window.
     
     Args:
         username: Chess.com username
+        basetime: Base time in seconds
+        increment: Increment in seconds
+        start_time: Window start timestamp
+        end_time: Window end timestamp
         
     Returns:
-        List of archive URLs in chronological order
+        List of game dictionaries filtered by time window and rated status
     """
     try:
-        response = chessdotcom.get_player_game_archives(username)
-        if not response or not hasattr(response, 'archives'):
-            return []
-        return response.archives
-    except Exception:
-        return []
+        # The helper does not accept a timeout argument; run it in a thread and enforce a 10s timeout
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(get_player_games_by_basetime_increment, username, basetime, increment)
+            try:
+                response = future.result(timeout=time_out)
+            except FutureTimeoutError:
+                future.cancel()
+                logger.error(
+                    f"Timeout fetching games for {username} with {basetime}+{increment} after {time_out}s"
+                )
+                return []
 
-
-def fetch_month_games(archive_url: str) -> List[dict]:
-    """
-    Fetch all games from a monthly archive.
-    
-    Args:
-        archive_url: URL to the monthly archive (not used with chess.com module)
-        
-    Returns:
-        List of game dictionaries
-        
-    Note:
-        This function needs to be called differently with the chess.com module.
-        The archive_url format is: https://api.chess.com/pub/player/{username}/games/{year}/{month}
-        We extract the username, year, and month from the URL.
-    """
-    try:
-        # Extract username, year, month from URL
-        # URL format: https://api.chess.com/pub/player/{username}/games/{year}/{month}
-        parts = archive_url.split('/')
-        if len(parts) < 7:
-            return []
-        
-        username = parts[5]  # player/{username}
-        year = parts[7]      # games/{year}
-        month = parts[8]     # {year}/{month}
-        
-        response = chessdotcom.get_player_games_by_month(username, year, month)
         if not response or not hasattr(response, 'games'):
             return []
 
         included_rules = ['chess', 'chess960']
 
-        # Convert games to dictionary format
+        # Convert games to dictionary format and apply filters
         games = []
         for game in response.games:
+            # Filter by rules
             if game.rules not in included_rules:
-                # filter casual games
                 continue
+            
+            # Filter by rated status - only include rated games
+            if not game.rated:
+                continue
+            
+            # Filter by time window
+            if not isinstance(game.end_time, int) or not (start_time <= game.end_time <= end_time):
+                continue
+            
             game_dict = {
                 'url': game.url,
                 'pgn': game.pgn,
                 'time_control': game.time_control,
-                'start_time': game.start_time,
+                #'start_time': game.start_time, #live increment does not have start_time
                 'end_time': game.end_time,
                 'rules': game.rules,
                 'time_class': game.time_class,
                 'fen': game.fen,
+                'rated': game.rated,
                 'white': {
                     'username': game.white.username if game.white else None,
                     'rating': game.white.rating if game.white else None,
@@ -180,7 +183,8 @@ def fetch_month_games(archive_url: str) -> List[dict]:
             }
             games.append(game_dict)
         return games
-    except Exception:
+    except Exception as e:
+        #logger.error(f"Error fetching games for {username} with {basetime}+{increment}: {e}", exc_info=True)
         return []
 
 
@@ -222,60 +226,6 @@ def fetch_player_profile(username: str) -> dict:
         return {}
 
 
-def month_urls_for_window(
-    archives: List[str], 
-    start_time: int, 
-    end_time: int
-) -> List[str]:
-    """
-    Filter archive URLs to only those that might contain games in the time window.
-    
-    Args:
-        archives: List of monthly archive URLs in chronological order
-        start_time: Window start timestamp
-        end_time: Window end timestamp
-        
-    Returns:
-        List of archive URLs that intersect the time window
-        
-    Note:
-        Returns the last 2-3 months that could contain games in the window
-        to avoid fetching unnecessary historical data.
-    """
-    start_dt = datetime.fromtimestamp(start_time, tz=timezone.utc)
-    end_dt = datetime.fromtimestamp(end_time, tz=timezone.utc)
-
-    def year_month(dt: datetime) -> Tuple[int, int]:
-        return dt.year, dt.month
-
-    # Get all year-month combinations that could contain relevant games
-    target_months = set()
-    target_months.add(year_month(start_dt))
-    target_months.add(year_month(end_dt))
-    
-    # Include month in between if crossing month boundary
-    mid_dt = start_dt + timedelta(days=15)
-    target_months.add(year_month(mid_dt))
-
-    # Find matching archive URLs
-    relevant_urls = []
-    for url in archives:
-        for year, month in target_months:
-            month_suffix = f"/{year}/{month:02d}"
-            if url.endswith(month_suffix):
-                relevant_urls.append(url)
-                break
-
-    # Remove duplicates while preserving chronological order
-    seen = set()
-    filtered_urls = []
-    for url in relevant_urls:
-        if url not in seen:
-            filtered_urls.append(url)
-            seen.add(url)
-
-    return filtered_urls
-
 time_controls_count = {}
 
 def fetch_games_in_window(
@@ -285,6 +235,7 @@ def fetch_games_in_window(
 ) -> List[dict]:
     """
     Fetch all games for a player within the specified time window.
+    Uses get_player_games_by_basetime_increment for each time control.
     
     Args:
         username: Chess.com username
@@ -292,37 +243,25 @@ def fetch_games_in_window(
         end_time: Window end timestamp
         
     Returns:
-        List of game dictionaries sorted by end_time
+        List of game dictionaries sorted by end_time, filtered for rated games only
     """
-    archives = fetch_player_archives(username)
-    if not archives:
-        return []
-    
-    # Get only relevant monthly archives
-    relevant_urls = month_urls_for_window(archives, start_time, end_time)
-    
-    # Fetch games from relevant archives
     all_games = []
-    for archive_url in relevant_urls:
-        games = fetch_month_games(archive_url)
+    
+    # Fetch games for each time control
+    for basetime, increment in TIME_CONTROLS:
+        games = fetch_games_by_basetime_increment(username, basetime, increment, start_time, end_time)
         all_games.extend(games)
         
-    for game in all_games:
-        time_control = game.get("time_control")
-        if time_control:
-            time_controls_count[time_control] = time_controls_count.get(time_control, 0) + 1
-    
-    # Filter games to the exact time window
-    filtered_games = []
-    for game in all_games:
-        game_end_time = game.get("end_time")
-        if isinstance(game_end_time, int) and start_time <= game_end_time <= end_time:
-            filtered_games.append(game)
+        # Update time controls count for tracking
+        for game in games:
+            time_control = game.get("time_control")
+            if time_control:
+                time_controls_count[time_control] = time_controls_count.get(time_control, 0) + 1
     
     # Sort by end_time to ensure chronological order
-    filtered_games.sort(key=lambda g: g.get("end_time", 0))
+    all_games.sort(key=lambda g: g.get("end_time", 0))
     
-    return filtered_games
+    return all_games
 
 
 def extract_rating_deviation(stats: dict, rules: str, time_class: str) -> Optional[int]:
