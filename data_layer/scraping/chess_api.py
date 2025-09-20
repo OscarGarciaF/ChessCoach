@@ -276,7 +276,7 @@ def month_urls_for_window(
 
     return filtered_urls
 
-time_controls_seen = set()
+time_controls_count = {}
 
 def fetch_games_in_window(
     username: str,
@@ -308,7 +308,9 @@ def fetch_games_in_window(
         all_games.extend(games)
         
     for game in all_games:
-        time_controls_seen.add(game.get("time_control"))
+        time_control = game.get("time_control")
+        if time_control:
+            time_controls_count[time_control] = time_controls_count.get(time_control, 0) + 1
     
     # Filter games to the exact time window
     filtered_games = []

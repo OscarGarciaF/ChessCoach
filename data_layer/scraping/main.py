@@ -38,7 +38,7 @@ from chess_api import (
     fetch_titled_players,
     parse_time_window,
     setup_chess_client,
-    time_controls_seen,
+    time_controls_count,
 )
 from config import THRESHOLDS, TITLE_ABBREVS, RELEVANT_TITLES
 from streak_analyzer import analyze_player_streaks
@@ -357,13 +357,13 @@ Examples:
         "interesting_streaks": output_streaks
     }
 
-    # Add overall time controls seen across all fetched games (deduplicated and sorted)
+    # Add time controls count with game frequencies
     try:
-        # time_controls_seen is a set in chess_api; convert to a sorted list for JSON
-        results["time_controls_seen"] = sorted(list(time_controls_seen)) if time_controls_seen else []
+        # time_controls_count is a dict {time_control: count} in chess_api
+        results["time_controls_count"] = dict(time_controls_count) if time_controls_count else {}
     except Exception as e:
-        logger.warning("Failed to include time_controls_seen in results: %s", e, exc_info=True)
-        results["time_controls_seen"] = []
+        logger.warning("Failed to include time_controls_count in results: %s", e, exc_info=True)
+        results["time_controls_count"] = {}
 
     results_file = os.path.join(args.out, "results.json")
     with open(results_file, "w", encoding="utf-8") as f:
@@ -382,7 +382,19 @@ Examples:
     logger.info("Processed %d games", total_games_processed)
     logger.info("Found %d interesting streaks", len(all_streaks))
     logger.info("Results written to: %s", results_file)
-    logger.info("Time controls seen: %s", results.get("time_controls_seen", []))
+    
+    # Log time controls with their counts
+    time_controls_data = results.get("time_controls_count", {})
+    if time_controls_data:
+        logger.info("Time controls found: %d unique types", len(time_controls_data))
+        # Sort by count (descending) for more useful logging
+        sorted_controls = sorted(time_controls_data.items(), key=lambda x: x[1], reverse=True)
+        for control, count in sorted_controls[:10]:  # Show top 10
+            logger.info("  %s: %d games", control, count)
+        if len(sorted_controls) > 10:
+            logger.info("  ... and %d more time controls", len(sorted_controls) - 10)
+    else:
+        logger.info("No time controls data available")
 
 
 if __name__ == "__main__":
