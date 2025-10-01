@@ -258,10 +258,19 @@ def fetch_games_in_window(
             if time_control:
                 time_controls_count[time_control] = time_controls_count.get(time_control, 0) + 1
     
+    #deduplicate games by URL
+    seen_urls = set()
+    deduplicated_games = []
+    for game in all_games:
+        url = game.get("url")
+        if url and url not in seen_urls:
+            seen_urls.add(url)
+            deduplicated_games.append(game)
+        
     # Sort by end_time to ensure chronological order
-    all_games.sort(key=lambda g: g.get("end_time", 0))
-    
-    return all_games
+    deduplicated_games.sort(key=lambda g: g.get("end_time", 0))
+
+    return deduplicated_games
 
 
 def extract_rating_deviation(stats: dict, rules: str, time_class: str) -> Optional[int]:
